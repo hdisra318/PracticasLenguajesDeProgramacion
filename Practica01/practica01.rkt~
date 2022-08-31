@@ -1,0 +1,300 @@
+#|
+
+Practica 01
+
+Integrantes:
+Hernandez Dorantes Israel - 318206604
+Martinez Calzada Diego -  318275457
+
+|#
+#lang plai
+
+;; 1. Función que filtra el contenido de una lista dado un predicado.
+;; Precondiciones: Una lista heterogénea y un predicado de un único argumento.
+;; Poscondiciones: Una lista cuyos elementos satisfacen el predicado.
+;; filtra-lista: (listof any) procedure -> (listof any)
+(define (filtra-lista l pred)
+  (cond
+    [(empty? l) l]
+    [(pred (car l)) (cons (car l) (filtra-lista (cdr l) pred))]
+    [else (filtra-lista (cdr l) pred)]))
+
+
+;; 2. Función que tome una lista y devuelva otra del mismo tamaño, cuyos elementos describen
+;; en texto el tipo de datos de los elementos en la lista original.
+;; Precondiciones: Una lista heterogénea.
+;; Poscondiciones: Una lista de cadenas que indican el tipo de datos de cada elemento en la lista dada. Los
+;; tipos de datos a describir son: boolean, number, char, string, symbol, keyword, pair y list. En caso
+;; de que la lista contenga un elemento con un tipo que no es alguno de los anteriores; debe indicar que el tipo
+;; es otro.
+;; tipos-lista: (listof any) -> (listof string)
+
+
+
+
+;; 3. Predicado que dado un número natural indica si es raro.
+;; Se dice que un número natural es raro si al sumar cada una de sus cifras elevadas al número de
+;; cifras que lo forman, se obtiene el numero original.
+;; Precondiciones: Un numero natural.
+;; Poscondiciones: Un booleano cuyo valor de verdad indica si el número dado es raro (#t) o no lo es (#f).
+;; raro?: number -> boolean
+(define (raro? n)
+  (define (sumaCuadrados numCadena cifrasNum i)
+    (if (>= i cifrasNum) 0
+        (let (
+              [digitoActual (string->number (substring numCadena i (+ 1 i)))])
+      (+ (expt digitoActual cifrasNum)
+         (sumaCuadrados numCadena cifrasNum (+ i 1))))))
+  (= n (sumaCuadrados (number->string n) (num-cifras n) 0)))
+      
+
+;; Funcion auxiliar que regresa el número de cifras de un numero
+;; Precondiciones: Un numero
+;; Postcondiciones Un numero que indica la cantidad de cifras que tiene el numero dado
+;; num-cifras: number -> number
+(define (num-cifras n)
+  (string-length (number->string n)))
+
+
+
+;; 4. Predicado que dado un número arbitrario de números, indica si están ordenados en forma
+;; descendente o no.
+;; Precondiciones: Una serie de números; potencialmente vacía.
+;; Poscondiciones: Un booleano cuyo valor de verdad indica si la serie numérica dada tiene un orden descendente
+;; (#t) o no (#f).
+;; descendente?: number* -> boolean
+
+(define descendente? (lambda nums
+    (if (< (length nums) 2)
+        #t
+        (if(> (first nums) (second nums))
+              (apply descendente? (rest nums))
+              #f
+         )
+     )
+))
+
+
+
+;; 5. Predicado que tome una cadena e indique si esta es un palíndromo. Un palíndromo es una
+;; cadena que se escribe igual que invirtiendo el orden de sus caracteres.
+;; Precondiciones: Una cadena; potencialmente vacía.
+;; Poscondiciones: Un booleano cuyo valor de verdad indica si la cadena dada es un palíndromo (#t) o
+;; no lo es (#f).
+;; palindromo?: string -> boolean
+(define (palindromo? cadena)
+  (define (reverso cadena pos)
+    (if (zero? pos) ""
+    (string-append (substring cadena (- pos 1) pos) (reverso cadena (- pos 1)))))
+  (equal? cadena (reverso cadena (string-length cadena))))
+    
+
+
+
+;; 6. Predicado que indica si un número entero es primo. Un número primo es aquel que solo es
+;; divisible por 1 y sí mismo (divisible a su vez significa que al dividir el número por otro se obtiene cero como residuo;
+;; la división es exacta).
+;; Precondiciones: Un número entero.
+;; Poscondiciones: Un booleano cuyo valor de verdad indica si el número es primo (#t) o no (#f).
+;; primo?: number -> boolean
+
+(define (primo? n)
+  (if(= 1 n)
+     #t
+     (let ([ls (filter zero? (aux-primo? n (sub1 n)))])
+       (if (empty? ls)
+           #t
+           #f
+        )
+      )
+   )
+)
+
+;; Funcion auxiliar de primo? con los modulos de a b hasta 2
+(define (aux-primo? a b)
+  (if (= b 1)
+      '()
+      (cons (modulo a b) (aux-primo? a (sub1 b)))
+  )
+)
+
+
+;; 7. Función que indica todas las posibles formas de obtener una cantidad entera positiva a
+;; partir de monedas de $1, $2 y $5 sin repeticiones. Se considera una combinación repetida
+;; aquella en la que únicamente cambian de lugar las monedas. Por ejemplo, para obtener 4;
+;; podríamos tener las combinaciones ($1, $2, $1) y ($2, $1, $1); pero en ambos casos tenemos una
+;; moneda de $2 y dos de $1; por lo que solo están cambiando de lugar y las consideraremos repetidas.
+;; Precondiciones: Un número entero positivo.
+;; Poscondiciones: Un número entero positivo que indica las distintas formas de combinar monedas de $1, $2 y
+;; $5 (sin repeticiones) para obtener la cantidad dada.
+;; num-comb-monedas: number -> number
+
+
+
+
+
+;; 8. Función que toma una lista de números y devuelve el promedio, moda y mediana de los elementos en la lista.
+;; El promedio es la suma de todos los elementos dividida por el total de elementos en la lista.
+;; La moda es el conjunto de valores que más se repite en la lista.
+;; Por último, la mediana es el valor en la posición central de la lista; es decir, en
+;; listas de tamaño impar, es el elemento cuya posición corresponde la mitad del tamaño de
+;; la lista y en listas de tamaño par, es el promedio de los valores cuya posición corresponde con
+;; el piso y techo de la mitad del tamaño de la lista.
+;; Precondiciones: Una lista numérica.
+;; Poscondiciones: Un primer número que representa el promedio de los elementos en la lista, un segundo
+;; número que representa la moda y un último número que representa la mediana.
+;; prom-mod-med: (listof number) -> number (listof number) number
+
+(define (prom-mod-med ls)
+  (values (promedio ls) (aux ls) (mediana ls))
+)
+
+;; Funcion auxiliar de prom-mod-med que regresa el promedio
+(define (promedio ls)
+  (/ (foldl + 0 ls) (length ls))
+)
+
+;; Funcion auxiliar de prom-mod-med que regresa la mediana
+(define (mediana ls)
+  (let ([t (length ls)])
+    (if(= 0 (modulo t 2))
+       (promedio (list (list-ref ls (sub1 (/ t 2))) (list-ref ls (/ t 2))))
+       (list-ref ls (quotient t 2))
+    )
+  )
+)
+
+;; Funcion auxiliar de moda que regresa el numero de veces que aparece x en una lista
+(define (aux-moda x ls)
+  (if(empty? ls)
+     0
+     (if (= x (car ls))
+         (+ 1 (aux-moda x (cdr ls)))
+         (+ 0 (aux-moda x (cdr ls)))
+     )
+  )
+)
+
+;; Funcion auxiliar de moda que regresa que dada una la lista regresa otra lista con el numero 
+;; de veces que se repite cada elemento de la lista
+(define (aux-moda2 ls)
+  (if(empty? ls)
+     '()
+     (cons (aux-moda (car ls) ls) (aux-moda2 (removeall (car ls) ls)) )
+  )
+)
+
+;; Funcion auxiliar de moda2 que remueve todas las x en la lista
+(define (removeall x ls)
+  (if (empty? ls )
+      '()
+      (if (= x (car ls))
+          (removeall x (cdr ls))
+          (cons (car ls) (removeall x (cdr ls)))
+      )
+  )
+)
+
+;; Funcion auxiliar de aux que dada una lista te regresa el maximo de esa lista
+(define (max-lista ls)
+  (first (sort ls >))
+)
+
+;; Funcion auxiliar de prom-mod-med que regresa la moda
+(define (aux ls)
+  (if(empty? ls)
+     '()
+     (let ([m (max-lista (aux-moda2 ls))])
+       (if(= m (aux-moda (car ls) ls))
+          (cons (car ls) (aux2 m (removeall (car ls) ls)))
+          (aux (removeall (car ls) ls))
+       )
+     )
+  )
+)
+
+;; Funcion auxiliar de aux que dado una n y una lista si en esa lista hay un elemento que
+se repite n veces, regresa esa lista con esos elementos
+(define (aux2 n ls)
+  (if (empty? ls)
+      '()
+      (if(= n (aux-moda (car ls) ls))
+         (cons (car ls) (aux2 n (removeall (car ls) ls)))
+         '()
+      )
+  )
+)
+
+
+
+;; 9. Función que genera en una lista, todas las posibles rotaciones de elementos de una lista dada.
+;; Precondiciones: Una lista.
+;; Postcondiciones: Una lista con todas las posibles rotaciones de los elementos de la lista original.
+;; rota: (listof any) -> (listof (listof any))
+
+
+
+
+
+;; 10. Función que toma una lista de enteros y determina si representa el inicio de
+;; una secesión geométrica.
+;; Precondiciones: Una lista numérica.
+;; Poscondiciones: Una lista de cadenas; cuyo cada elemento representa los elementos de la lista
+;; original en su forma a_i = a_1 ∗ r^(i-1) en caso de que sea represente el inicio de
+;; una sucesión geométrica, en otro caso devuelve la lista vacía.
+;; extender-suc-geom: (listof number) → (listof string)
+
+(define (extender-suc-geom ls)
+  (let* ([n (length ls)]
+         [i 1]
+         [a1 (car ls)]
+         [r (/ (list-ref ls (sub1 (length ls))) (list-ref ls (- (length ls) 2)))]
+         [ls2 (aux-geom3 n r a1 i)]
+        )
+    (if (and #t (aux-geom4 ls ls2))
+        (aux-geom n i a1 r)
+        '()
+    )
+  )
+)
+
+;; Funcion auxiliar que regresa la lista de string con el formato para extender-suc-geom
+(define (aux-geom n i a1 r)
+  (define (formato n i al r)
+    (string-append (number->string a1) "*" (number->string r) "^(" (number->string i) "-1)")
+  )
+  (if(= i n)
+     (cons (formato n i a1 r) '())
+     (cons (formato n i a1 r) (aux-geom n (+ 1 i) a1 r))
+  )
+)
+
+;; Funcion auxiliar para aux-geom3 que calcula a_1 * r ^ (i - 1)
+(define (aux-geom2 r a1 i)
+  (* a1 (expt r (sub1 i)))
+)
+
+;; Funcion auxiliar para extender-suc-geom que regresa la lista con los elementos 
+;; a_1 * r ^ (i - 1)
+(define (aux-geom3 n r a1 i)
+  (if (= n i)
+      (cons (aux-geom2 r a1 i) '())
+      (cons (aux-geom2 r a1 i) (aux-geom3 n r a1 (+ 1 i)))
+  )
+)
+
+;; Funcion auxiliar para extender-suc-geom que da #t si dos listas son iguales, elemento por
+;; elemento, #f en otro caso
+(define (aux-geom4 ls1 ls2)
+  (if (empty? ls1)
+      #t
+      (if (= (car ls1) (car ls2))
+          (and #t (aux-geom4 (cdr ls1) (cdr ls2)))
+          (and #f)
+      )
+  )
+)
+
+
+
+
