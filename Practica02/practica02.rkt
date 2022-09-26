@@ -9,6 +9,60 @@ Martinez Calzada Diego -  318275457
 |#
 #lang plai
 
+;; ******************************************************************
+
+;; 1. (1 pto) Tipo de dato abstracto Figura utilizado para trabajar con figuras geométricas con
+;; constructores:
+;; triangulo - recibe la longitud de los tres lados de un triangulo
+;; rectangulo - recibe la altura y base de un rectangulo
+;; rombo - recibe el lado, diagonal mayor y diagonal menor de un rombo
+;; paralelogramo - recibe los dos lados de un paralelogramo (a es la base) y su altura
+;; elipse - recibe el semieje mayor y el semieje menor de una elipse
+(define-type Figura
+  [triangulo (a number?) (b number?) (c number?)]
+  [rectangulo (a number?) (b number?)]
+  [rombo (l number?) (D number?) (d number?)]
+  [paralelogramo (a number?) (b number?) (h number?)]
+  [elipse (a number?) (b number?)]
+)
+
+
+;; ******************************************************************
+
+;; 2. Utilizando el tipo de dato Figura se definen la siguientes funciones:
+
+;; (1.5 pts) Funcion que calcula el perimetro de una Figura dada.
+;; Precondidicones: una instancia de Figura
+;; Postcondiciones: el perimetro de la Figura dada.
+;; perimetro: Figura -> number
+(define (perimetro f)
+        (cond     
+          [(triangulo? f) (+ (triangulo-a f) (triangulo-b f) (triangulo-c f))]
+          [(rectangulo? f) (+ (* 2 (rectangulo-a f)) (* 2 (rectangulo-b f)))]
+          [(rombo? f) (* 4 (rombo-l f))]
+          [(paralelogramo? f) (+ (* 2 (paralelogramo-a f)) (* 2 (paralelogramo-b f)))]
+          [(elipse? f) (* (* 2 pi) (sqrt (/ (+ (expt (elipse-a f) 2) (expt (elipse-b f) 2)) 2)))])
+)
+
+
+
+;; (1.5 pts) Funcion que calcula el area de una Figura dada.
+;; Precondidicones: una instancia de Figura
+;; Postcondiciones: el area de la Figura dada.
+;; perimetro: Figura -> number
+(define (area f)
+  (cond
+    [(triangulo? f)
+     (let ([semiPerim (/ (+ (triangulo-a f) (triangulo-b f) (triangulo-c f)) 2)]) ;; Formula Heron area triangulo 3 lados
+       (sqrt (* semiPerim (- semiPerim (triangulo-a f)) (- semiPerim (triangulo-b f))
+               (- semiPerim (triangulo-c f)))))]
+    [(rectangulo? f) (* (rectangulo-a f) (rectangulo-b f))]
+    [(rombo? f) (/ (* (rombo-D f) (rombo-d f)) 2)]
+    [(paralelogramo? f) (* (paralelogramo-a f) (paralelogramo-h f))]
+    [(elipse? f) (* pi (elipse-a f) (elipse-b f))])
+)
+
+
 
 ;; ******************************************************************
 
@@ -18,7 +72,6 @@ Martinez Calzada Diego -  318275457
 ;; (1 pts). El tipo de datos Vagon, que debe incluir 4
 ;; constructores; uno por cada tipo de vagón descrito
 ;; anteriormente:
-
 (define-type Vagon
   [dormitorio (camas positive-integer?)]
   [locomotora (p positive-integer?)]
@@ -29,7 +82,6 @@ Martinez Calzada Diego -  318275457
 
 ;; (1 pto). El tipo de datos Tren, que modela trenes conforme a las
 ;; condiciones descritas anteriormente (vea la descripción).
-
 (define-type Tren
   [tren-loc (vagon locomotora?)]
   [tren (loci locomotora?) (resto Tren?) (locd locomotora?)]
@@ -57,7 +109,6 @@ Martinez Calzada Diego -  318275457
 ;; Ejemplos de funcion
 ;; (num-pasajeros (tren-f (tren-f (tren-f (tren-loc (locomotora 1)) (pasajeros 10)) (restaurante 5 2)) (dormitorio 10)))
 ;; (num-pasajeros (tren-f (tren-f (tren-loc (locomotora 1)) (pasajeros 10)) (pasajeros 20)))
-
 
 (define (num-pasajeros tren)
   (cond
@@ -98,14 +149,12 @@ Martinez Calzada Diego -  318275457
 ;; Ejemplos:
 ;; (arrastre-usado (tren-f (tren-f (tren-f (tren-loc (locomotora 1)) (pasajeros 10)) (restaurante 5 2)) (dormitorio 10)))
 
-
 (define (arrastre-usado tren)
   (/ (* (cuenta-vagones-noloc tren) 100 ) (ac-potloc tren)))
 
 
-;; (ac-potloc) Funcion auxiliar que calcula la potencia de todas las
+;; (ac-potloc) Funcion auxiliar de la funcion arrastre-usado que calcula la potencia de todas las
 ;; locomotoras.
-
 (define (ac-potloc tren)
   (cond
     [(tren-loc? tren) (let ([vagon (tren-loc-vagon tren)])
@@ -135,9 +184,8 @@ Martinez Calzada Diego -  318275457
                 0)))])
   )
 
-;; (cuenta-vagones-noloc) Funcion auxiliar que regresa el numero de
+;; (cuenta-vagones-noloc) Funcion auxiliar de la funcion arrastre-usado que regresa el numero de
 ;; vagones sin contar las locomotoras.
-
 (define (cuenta-vagones-noloc tren)
   (cond
     [(tren-loc? tren)(let (
@@ -189,9 +237,8 @@ Martinez Calzada Diego -  318275457
   (no-negativo (- (num-pasajeros tren) (num-dormitorios tren))))
 
 
-;; (num-dormitorios) Funcion auxiliar que calcula el numero de
+;; (num-dormitorios) Funcion auxiliar de la funcion sin-cama que calcula el numero de
 ;; dormitorios.
-
 (define (num-dormitorios tren)
   (cond
     [(tren-loc? tren) 0]
@@ -210,9 +257,8 @@ Martinez Calzada Diego -  318275457
                                  0)
                              (num-dormitorios resto)))]))
 
-;; (no-negativo) Funcion auxliar que dado un numero, si es negativo
+;; (no-negativo) Funcion auxliar de la funcion sin-cama que dado un numero, si es negativo
 ;; regresa 0, si no regresa el mismo numero.
-
 (define (no-negativo n)
   (if (negative? n)
       0
@@ -251,8 +297,7 @@ Martinez Calzada Diego -  318275457
        max-por-mesas)))
 
 
-;; (num-mesas) Funcion auxiliar que calcula el numero de mesas.
-
+;; (num-mesas) Funcion auxiliar de la funcion max-comensales que calcula el numero de mesas.
 (define (num-mesas tren)
   (cond
     [(tren-loc? tren) 0]
@@ -271,8 +316,7 @@ Martinez Calzada Diego -  318275457
                                  0)
                              (num-mesas resto)))]))
 
-;; (num-personal) Funcion auxiliar que calcula el numero de personal.
-
+;; (num-personal) Funcion auxiliar de la funcion max-comensales que calcula el numero de personal.
 (define (num-personal tren)
   (cond
     [(tren-loc? tren) 0]
@@ -291,3 +335,70 @@ Martinez Calzada Diego -  318275457
                                  0)
                              (num-personal resto)))]))
 
+
+
+;; ******************************************************************
+
+;; 5. (1.5 pts) Funciones que realizan una prueba unitaria de cada uno de los ejercicios en la practica
+
+;; Funciones que realizan las pruebas unitarias para el tipo de datos Figura:
+;; Funcion que realiza la prueba unitaria de la funcion perimetro para triangulo
+(define (prueba-perimetro-triangulo)
+  (test (perimetro (triangulo 7 9 11)) 27))
+
+;; Funcion que realiza la prueba unitaria de la funcion perimetro para rectangulo
+(define (prueba-perimetro-rectangulo)
+  (test (perimetro (rectangulo 12 6)) 36))
+
+;; Funcion que realiza la prueba unitaria de la funcion perimetro para rombo
+(define (prueba-perimetro-rombo)
+  (test (perimetro (rombo 17 30 16)) 68))
+
+;; Funcion que realiza la prueba unitaria de la funcion perimetro para paralelogramo
+(define (prueba-perimetro-paralelogramo)
+  (test (perimetro (paralelogramo 7 17 5)) 48))
+
+;; Funcion que realiza la prueba unitaria de la funcion perimetro para elipse
+(define (prueba-perimetro-elipse)
+  (test (perimetro (elipse 9.45 4.87)) 47.232))
+
+;; Funcion que realiza la prueba unitaria de la funcion area para triangulo
+(define (prueba-area-triangulo)
+  (test (area (triangulo 7 9 11)) 31.42))
+
+;; Funcion que realiza la prueba unitaria de la funcion area para rectangulo
+(define (prueba-area-rectangulo)
+  (test (area (rectangulo 12 6)) 72))
+
+;; Funcion que realiza la prueba unitaria de la funcion area para rombo
+(define (prueba-area-rombo)
+  (test (area (rombo 17 30 16)) 240))
+
+;; Funcion que realiza la prueba unitaria de la funcion area para paralelogramo
+(define (prueba-area-paralelogramo)
+  (test (area (paralelogramo 7 17 5)) 35))
+
+;; Funcion que realiza la prueba unitaria de la funcion area para elipse
+(define (prueba-area-elipse)
+  (test (area (elipse 9.45 4.87)) 144.58))
+
+;; Funciones que realizan las pruebas unitarias para los tipos de datos Vagon y Tren:
+;; Funcion que realiza la prueba unitaria de la funcion num-pasajeros
+(define (prueba-num-pasajeros)
+  (test (num-pasajeros (tren-f (tren-f (tren-f (tren-loc (locomotora 1)) (pasajeros 15))
+                                               (dormitorio 30)) (pasajeros 15))) 30))
+
+;; Funcion que realiza la prueba unitaria de la funcion arrastre-usado
+(define (prueba-arrastre-usado)
+  (test (arrastre-usado (tren-f (tren-f (tren-f (tren-f (tren-loc (locomotora 2)) (pasajeros 20))
+                                                (dormitorio 15)) (restaurante 10 10)) (dormitorio 5))) 200))
+
+;; Funcion que realiza la prueba unitaria de la funcion sin-cama
+(define (prueba-sin-cama)
+  (test (sin-cama (tren-f (tren-f (tren-f (tren-loc (locomotora 1)) (pasajeros 10)) (dormitorio 10))
+                          (pasajeros 5))) 5))
+
+;; Funcion que realiza la prueba unitaria de la funcion max-comensales
+(define (prueba-max-comensales)
+  (test (max-comensales (tren-f (tren-f (tren-f (tren-loc (locomotora 2)) (dormitorio 20)) (pasajeros 20))
+                                (restaurante 5 5))) 20))
