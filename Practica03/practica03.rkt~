@@ -1,25 +1,5 @@
-#|
-
-Practica 03
-
-Integrantes:
-Hernandez Dorantes Israel - 318206604
-Martinez Calzada Diego -  318275457
-
-|#
 #lang plai
 
-
-;; ******************************************************************
-
-;; 1. (3pts) Funcion (parse sexp), la cual recibe una expresion simbolica (symbolic expression,
-;; s-expression) y construye un Arbol de Sintaxis Abstracta (Abstract Syntax Tree - AST)
-;; a partir de la s-expression si es una expresión valida en el lenguaje FWAE.
-;; En otro caso, arroja un error.
-;; * Precondiciones: una expresion simbolica (symbolic expression; s-expression).
-;; * Postcondiciones: si la s-expression de entrada satisface la gramatica del lenguaje FWAE; devuelve un arbol
-;;   de sintaxis abstracta AST, de lo contrario, enviar un error.
-;; parse: s-expression -> AST
 (define (parse sexp)
   (define (parse-op opsexp)
     (let (
@@ -32,7 +12,7 @@ Martinez Calzada Diego -  318275457
                       [(modulo) modulo]
                       [(expt) expt]
                       [(not) not])])
-      (op operador (map parse (rest opsexp)))
+      (op operador (map parse (resto opsexp)))
       )
   )
   (cond
@@ -50,26 +30,6 @@ Martinez Calzada Diego -  318275457
   )
 
 
-;; Tipo de dato para representar los AST
-(define-type AST
-  [id (i symbol?)]
-  [num (n number?)]
-  [bool (b boolean?)]
-  [op (f procedure?) (args (listof AST?))]
-  [with (bindings (listof binding?)) (body AST?)]
-  [with* (bindings (listof binding?)) (body AST?)]
-  [fun (params (listof symbol?)) (body AST?)]
-  [app (fun AST?) (args (listof AST?))]
-)
-
-;; Tipo de dato para las ataduras (Bindings)
-(define-type Binding
-  [binding (id symbol?) (value AST?)]
-)
-  
-
-
-
 (define (subst fwae-ast sub-id valor)
   (cond
     ; Si la funcion ES un id y puede ser el que esta buscando
@@ -85,7 +45,7 @@ Martinez Calzada Diego -  318275457
     )
 )
 
-#|(define (interp fwae-ast)
+(define (interp fwae-ast)
   (cond
     [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
@@ -100,7 +60,7 @@ Martinez Calzada Diego -  318275457
     )
 )
 
-|#
+
 
 
 

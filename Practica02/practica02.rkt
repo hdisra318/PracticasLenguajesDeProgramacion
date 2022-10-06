@@ -32,8 +32,8 @@ Martinez Calzada Diego -  318275457
 ;; 2. Utilizando el tipo de dato Figura se definen la siguientes funciones:
 
 ;; (1.5 pts) Funcion que calcula el perimetro de una Figura dada.
-;; Precondidicones: una instancia de Figura
-;; Postcondiciones: el perimetro de la Figura dada.
+;; * Precondidicones: una instancia de Figura
+;; * Postcondiciones: el perimetro de la Figura dada.
 ;; perimetro: Figura -> number
 (define (perimetro f)
         (cond     
@@ -47,8 +47,8 @@ Martinez Calzada Diego -  318275457
 
 
 ;; (1.5 pts) Funcion que calcula el area de una Figura dada.
-;; Precondidicones: una instancia de Figura
-;; Postcondiciones: el area de la Figura dada.
+;; * Precondidicones: una instancia de Figura
+;; * Postcondiciones: el area de la Figura dada.
 ;; perimetro: Figura -> number
 (define (area f)
   (cond
@@ -98,7 +98,7 @@ Martinez Calzada Diego -  318275457
 ;; (1 pto). La función (num-pasajeros tren) que calcula el número de
 ;; pasajeros máximo que pueden abordar el tren.
 
-;; num-pasajeros: Tren → positive-integer
+;; num-pasajeros: Tren -> positive-integer
 
 ;; * Precondiciones: un tren que satisface las condiciones establecidas
 ;;   en el ejercicio anterior.
