@@ -34,6 +34,7 @@ Martinez Calzada Diego -  318275457
                       [(not) not])])
       (op operador (map parse (rest opsexp)))
       )
+    
   )
   (cond
     [(symbol? sexp)
@@ -50,7 +51,7 @@ Martinez Calzada Diego -  318275457
   )
 
 
-;; Tipo de dato para representar los AST
+;; Tipo de dato para representar el Arbol de Sintaxis Abstracta (AST)
 (define-type AST
   [id (i symbol?)]
   [num (n number?)]
@@ -69,22 +70,39 @@ Martinez Calzada Diego -  318275457
   
 
 
-
+;; 2. (3pts) Funcion que realiza la sustitucion fwae-expr[sub-id:=value];
+;; es decir, reemplaza cada ocurrencia de la variable sub-id en la expresión fwae-expr por otra expresión value.
+;; * Precondiciones: una expresión FWAE representada en un AST, un símbolo a sustituir y otra expresión FWAE
+;;   (AST) para sustituir el símbolo.
+;; * Postcondiciones: una expresión FWAE representada como AST con el símbolo sustituido por la segunda expresión
+;;   FWAE.
+;; subst: AST, symbol, AST -> AST
 (define (subst fwae-ast sub-id valor)
   (cond
     ; Si la funcion ES un id y puede ser el que esta buscando
-    [(id? fwae-ast) (if (= sub-id (id-i fwae-ast))
+    [(id? fwae-ast) (if (eq? (id-i sub-id) (id-i fwae-ast))
                         valor
                         fwae-ast
                         )]
-    ; La exoresion PUEDE tener ID's y hay que buscar en ellos sub-id
+    ; La expresion PUEDE tener ID's y hay que buscar en ellos sub-id
     [(op? fwae-ast) (op (op-f fwae-ast)
         (map (lambda (arg) (subst arg sub-id valor)) (op-args fwae-ast)))]
+
+    ; La expresion es un with
+    ;;[(with? fwae-ast) (with (map (lambda (id) (subst id
+    
     ; La expresion NO PUEDE tener ID's
     [else fwae-ast]
     )
 )
 
+
+
+;; 3. (3pts) Funcion que evalua la expresion FWAE dada.
+;; * Precondiciones: una expresion FWAE en su representacion como Arbol de Sintaxis Abstracta (AST).
+;; * Postcondiciones: un numero, booleano o función en su representacion como Arbol de Sintaxis Abstracta
+;;   (AST) a la que se reduce la expresión FWAE dada tras ser evaluada.
+;; interp: AST -> number U boolean U AST-fun
 #|(define (interp fwae-ast)
   (cond
     [(with? fwae-ast) (let* (
