@@ -46,6 +46,7 @@ Martinez Calzada Diego -  318275457
     [(number? sexp) (num sexp)]
     [(list? sexp) (case (first sexp)
           [(+ - * / modulo expt not) (parse-op sexp)]
+          [(with) (with (binding (second sexp) (third sexp)) (parse (rest (rest (rest sexp)))))]
      )]
     )
   )
