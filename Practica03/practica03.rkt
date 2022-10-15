@@ -46,10 +46,24 @@ Martinez Calzada Diego -  318275457
     [(number? sexp) (num sexp)]
     [(list? sexp) (case (first sexp)
           [(+ - * / modulo expt not) (parse-op sexp)]
-          [(with) (with (binding (second sexp) (third sexp)) (parse (rest (rest (rest sexp)))))]
+          [(with) (with (map appBinding (second sexp)) (parse (third sexp)))]
+          [(with*) (with* (map appBinding (second sexp)) (parse (third sexp)))]
+          [(fun) (fun (second sexp) (funBody (third sexp)))]
+          [(app) (app (parse (second sexp)) (map parse (rest (rest sexp))))]
      )]
     )
   )
+
+
+;; Funcion auxiliar de parse que transforma a binding la pareja pasada
+(define (appBinding pareja)
+  (binding (first pareja) (parse (second pareja))))
+
+;; Funcion auxiliar de parse que realiza el parse del cuerpo de la funcion
+(define (funBody body)
+  (if (empty? (rest body))
+              (parse (first body))
+              (parse body)))
 
 
 ;; Tipo de dato para representar el Arbol de Sintaxis Abstracta (AST)
@@ -70,6 +84,7 @@ Martinez Calzada Diego -  318275457
 )
   
 
+;; ******************************************************************
 
 ;; 2. (3pts) Funcion que realiza la sustitucion fwae-expr[sub-id:=value];
 ;; es decir, reemplaza cada ocurrencia de la variable sub-id en la expresión fwae-expr por otra expresión value.
@@ -145,14 +160,19 @@ Martinez Calzada Diego -  318275457
 )
 
 
+;; ******************************************************************
 
 ;; 3. (3pts) Funcion que evalua la expresion FWAE dada.
 ;; * Precondiciones: una expresion FWAE en su representacion como Arbol de Sintaxis Abstracta (AST).
 ;; * Postcondiciones: un numero, booleano o función en su representacion como Arbol de Sintaxis Abstracta
 ;;   (AST) a la que se reduce la expresión FWAE dada tras ser evaluada.
 ;; interp: AST -> number U boolean U AST-fun
-#|(define (interp fwae-ast)
+(define (interp fwae-ast)
   (cond
+    [(id? fwae-ast) (error "error: Variable libre")]
+    [(num? fwae-ast) fwae-ast]
+    [(op? fware-ast) (cond
+                       [(eq? fwae-ast-op +) (+  ]
     [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
                              [primeros-bdgs (())]
@@ -166,7 +186,6 @@ Martinez Calzada Diego -  318275457
     )
 )
 
-|#
 
 
 ;; 4. (1 pto). Indique con comentarios en todas las invocaciones a las funciones subst (Ejercicio 2) e interp (Ejercicio
