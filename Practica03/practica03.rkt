@@ -77,23 +77,70 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: una expresión FWAE representada como AST con el símbolo sustituido por la segunda expresión
 ;;   FWAE.
 ;; subst: AST, symbol, AST -> AST
+
 (define (subst fwae-ast sub-id valor)
+  (define (subst-aux op-aux)
+    (subst op-aux sub-id valor)
+  )
+  (define (revisa-named-expr ls un-id)
+    (if (empty? ls)
+        #f
+        (let ([kslajsoa (first ls)])
+          (if (equal? (binding-id kslajsoa) un-id)
+              #t
+              (revisa-named-expr (rest ls) un-id)
+          )
+      )
+    )
+  )
+  (define (cambia-named-expr ls)
+    (binding (binding-id ls) (subst (binding-value ls) sub-id valor))
+    ;;((binding-id ls) (subst (binding-value ls) sub-id valor))
+  )
   (cond
     ; Si la funcion ES un id y puede ser el que esta buscando
-    [(id? fwae-ast) (if (eq? (id-i sub-id) (id-i fwae-ast))
+    [(id? fwae-ast) (if (equal? sub-id (id-i fwae-ast))
                         valor
                         fwae-ast
                         )]
-    ; La expresion PUEDE tener ID's y hay que buscar en ellos sub-id
+    ; La exoresion PUEDE tener ID's y hay que buscar en ellos sub-id
+    ;; (map (lambda arg (subst arg sub-id valor)) (op-args fwae-ast)))
     [(op? fwae-ast) (op (op-f fwae-ast)
-        (map (lambda (arg) (subst arg sub-id valor)) (op-args fwae-ast)))]
-
-    ; La expresion es un with
-    ;;[(with? fwae-ast) (with (map (lambda (id) (subst id
-    
-    ; La expresion NO PUEDE tener ID's
+        (map subst-aux (op-args fwae-ast)))]
+    [(with? fwae-ast)
+     (if (revisa-named-expr (with-bindings fwae-ast) sub-id)
+         (with (map cambia-named-expr (with-bindings fwae-ast)) (with-body fwae-ast))
+         (with (map cambia-named-expr (with-bindings fwae-ast)) (subst (with-body fwae-ast) sub-id valor))
+     )
+    ]
+    [(with*? fwae-ast)
+     (if (revisa-named-expr (with*-bindings fwae-ast) sub-id)
+         (with* (map cambia-named-expr (with*-bindings fwae-ast)) (with*-body fwae-ast))
+         (with* (map cambia-named-expr (with*-bindings fwae-ast)) (subst (with*-body fwae-ast) sub-id valor))
+     )
+    ]
+    [(fun? fwae-ast)
+     (if (esta-en-lista sub-id (fun-params fwae-ast))
+         fwae-ast
+         (fun (fun-params fwae-ast) (subst (fun-body fwae-ast) sub-id valor))
+         )
+    ]
+    [(app? fwae-ast)
+     (app (subst (app-fun fwae-ast) sub-id valor) (map subst-aux (app-args fwae-ast)))
+    ]
+    ; La expresion NO puede tener ID's
     [else fwae-ast]
     )
+)
+
+(define (esta-en-lista v ls)
+  (if (empty? ls)
+      #f
+      (if (equal? v (first ls))
+          #t
+          (esta-en-lista v (rest ls))
+      )
+  )
 )
 
 
@@ -120,6 +167,21 @@ Martinez Calzada Diego -  318275457
 
 |#
 
+
+;; 4. (1 pto). Indique con comentarios en todas las invocaciones a las funciones subst (Ejercicio 2) e interp (Ejercicio
+;; 3) si su interprete tiene implementada evaluacion glotona o evaluacion perezosa y porque. Un interprete gloton
+;; primero evalua los valores asociados a un identificador y despues sustituye estos valores. Un interprete perezoso,
+;; primero sustituye el cuerpo de la expresion asociada a un identificador y despues evalua la expresion. Debe evitar
+;; mezclar ambas estrategias de evaluacion en su interprete.
+
+#| La composicion de funciones en las que se invoca primero a <subst>,
+   hace al interprete <perezoso>.
+   Esto se debe a que <en ningun momento se llama a una funcion que
+   haga alguna evaluacion, es decir, si como parametro se da una
+   operacion que se pueda evaluar no lo hace. Ademas se respeta el
+   hecho que la funcion subst solamanete sustituye, y esto tambien
+   hace que sea perezoso>
+|#
 
 
 
