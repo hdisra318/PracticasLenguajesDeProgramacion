@@ -171,9 +171,17 @@ Martinez Calzada Diego -  318275457
   (cond
     [(id? fwae-ast) (error "error: Variable libre")]
     [(num? fwae-ast) fwae-ast]
-    [(op? fware-ast) (cond
-                       [(eq? fwae-ast-op +) (+  ]
-    [(with? fwae-ast) (let* (
+    [(bool? fwae-ast) fwae-ast]
+    [(op? fwae-ast) (cond
+                      [(eq? + (op-f fwae-ast)) (operSum (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? - (op-f fwae-ast)) (operRes (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? * (op-f fwae-ast)) (operProd (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? / (op-f fwae-ast)) (operDiv (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? modulo (op-f fwae-ast)) (operMod (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? expt (op-f fwae-ast)) (operExpt (map num-n (map interp (op-args fwae-ast))))]
+                      [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))]
+                       
+    #|[(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
                              [primeros-bdgs (())]
                              [ultimo-bdg (last bdgs)])
@@ -182,9 +190,77 @@ Martinez Calzada Diego -  318275457
                              ; ultimo elemento para foldl
                                ultimo-bdg
                                primeros-bdgs)
-                             )]
+                             )]|#
+                      )]
     )
 )
+
+
+;; Funcion auxuliar de interp que realiza la operacion de suma sobre una lista de numeros.
+;; * Precondiciones: una lista de numeros de tamano mayor a 1.
+;; * Postcondiciones: la suma de los numeros de la lista, si la lista es de tamano menor a 1 se lanza
+;;   un error.
+(define (operSum l)
+  (if (> (length l) 1)
+      (foldl + 0 l)
+      (error "error: + requiere mas de un parametro")))
+
+;; Funcion auxuliar de interp que realiza la operacion de resta sobre una lista de numeros.
+;; * Precondiciones: una lista de numeros de tamano mayor a 1.
+;; * Postcondiciones: la resta de los numeros de la lista, si la lista es de tamano menor a 1 se lanza
+;;   un error.
+(define (operRes l)
+  (if (> (length l) 1)
+      (foldl - 0 l)
+      (error "error: - requiere mas de un parametro")))
+
+;; Funcion auxuliar de interp que realiza la operacion de producto sobre una lista de numeros.
+;; * Precondiciones: una lista de numeros de tamano mayor a 1.
+;; * Postcondiciones: el producto de los numeros de la lista, si la lista es de tamano menor a 1 se lanza
+;;   un error.
+(define (operProd l)
+  (if (> (length l) 1)
+      (foldl * 1 l)
+      (error "error: * requiere mas de un parametro")))
+
+;; Funcion auxuliar de interp que realiza la operacion de division sobre una lista de numeros.
+;; * Precondiciones: una lista de numeros de tamano 2.
+;; * Postcondiciones: la division de los numeros de la lista, si la lista es de tamano distinto de 2 se lanza
+;;   un error.
+(define (operDiv l)
+  (if (eq? (length l) 2)
+      (foldl / 1 l)
+      (error "error: / requiere dos parametros")))
+
+;; Funcion auxuliar de interp que realiza la operacion de modulo sobre una lista de numeros
+;; * Precondiciones: una lista de numeros de tamano 2.
+;; * Postcondiciones: el modulo de los numeros de la lista, si la lista es de tamano distinto de 2 se lanza
+;;   un error.
+(define (operMod l)
+  (if (eq? (length l) 2)
+      (modulo (first l) (second l))
+      (error "error: Modulo requiere dos parametros")))
+
+;; Funcion auxuliar de interp que realiza la operacion de expt sobre una lista de numeros
+;; * Precondiciones: una lista de numeros de tamano 2.
+;; * Postcondiciones: el expt de los numeros de la lista, si la lista es de tamano distinto de 2 se lanza
+;;   un error.
+(define (operExpt l)
+  (if (eq? (length l) 2)
+      (expt (first l) (second l))
+      (error "error: Expt requiere dos parametros")))
+
+;; Funcion auxuliar de interp que realiza la operacion de not sobre una lista de booleanos
+;; * Precondiciones: una lista de booleanos de tamano 1.
+;; * Postcondiciones: la negacion del booleano de la lista, si la lista es de tamano mayor a 1 se lanza
+;;   un error.
+(define (operNot l)
+  (if (eq? (length l) 1)
+      (not (first l))
+      (error "error: Not requiere un parametro")))
+  
+  
+
 
 
 
