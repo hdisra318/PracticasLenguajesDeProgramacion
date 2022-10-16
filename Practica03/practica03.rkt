@@ -179,19 +179,24 @@ Martinez Calzada Diego -  318275457
                       [(eq? / (op-f fwae-ast)) (operDiv (map num-n (map interp (op-args fwae-ast))))]
                       [(eq? modulo (op-f fwae-ast)) (operMod (map num-n (map interp (op-args fwae-ast))))]
                       [(eq? expt (op-f fwae-ast)) (operExpt (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))]
-                       
-    #|[(with? fwae-ast) (let* (
+                      [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))])]
+    [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
-                             [primeros-bdgs (())]
-                             [ultimo-bdg (last bdgs)])
-                             (foldl (lambda (bdg)
-                               (subst (with-body fwae-ast) (binding-id bdg) (binding-value bdg)))
+                             [primeros-bdgs (cdr bdgs)]
+                             [ultimo-bdg (car bdgs)])
+                             (interp (foldl (lambda (bdg)
+                               (subst (with-body fwae-ast) (binding-id bdg) (binding-value bdg)));; El lambda solo toma un argumento
                              ; ultimo elemento para foldl
                                ultimo-bdg
                                primeros-bdgs)
-                             )]|#
-                      )]
+                             ))]
+    [(fun? fwae-ast) fwae-ast]
+    [(app? fwae-ast) (let* (
+                            [func (app-fun fwae-ast)]
+                            [oper (fun-body func)]
+                            [params (fun-params func)]
+                            [argus (app-args fwae-ast)])
+                            (evaluaFunc func params oper argus))]
     )
 )
 
@@ -259,10 +264,24 @@ Martinez Calzada Diego -  318275457
       (not (first l))
       (error "error: Not requiere un parametro")))
   
-  
+;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
+(define (evaluaFunc f params oper argus)
+  (cond
+    [(not (fun? f)) (error "error: No es una funcion")]
+    [(not (eq? (length params) (length argus))) (error "error: El numero de parametros es inadecuado")]
+    [else (interp (subst oper (map parse params) argus))]
+   )
+)
 
 
-
+;; Funcion auxiliar de evaluaFunc para sustituir los valores de los parametros y evaluar la funcion
+(define (sustParamArgs oper params values)
+  (let* (
+        [param (car params)]
+        [arg (car values)]
+        [newOper (subst oper param values)])
+    (sustParamArgs newOper (cdr params) (cdr values))))
+        
 
 ;; 4. (1 pto). Indique con comentarios en todas las invocaciones a las funciones subst (Ejercicio 2) e interp (Ejercicio
 ;; 3) si su interprete tiene implementada evaluacion glotona o evaluacion perezosa y porque. Un interprete gloton
