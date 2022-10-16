@@ -182,13 +182,7 @@ Martinez Calzada Diego -  318275457
                       [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))])]
     [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
-                             [primeros-bdgs (cdr bdgs)]
-                             [ultimo-bdg (car bdgs)])
-                             (interp (foldl (lambda (bdg)
-                               (subst (with-body fwae-ast) (binding-id bdg) (binding-value bdg)));; El lambda solo toma un argumento
-                             ; ultimo elemento para foldl
-                               ultimo-bdg
-                               primeros-bdgs)
+                             (interp (evalWith fwae-ast bdgs))
                              ))]
     [(fun? fwae-ast) fwae-ast]
     [(app? fwae-ast) (let* (
@@ -196,7 +190,7 @@ Martinez Calzada Diego -  318275457
                             [oper (fun-body func)]
                             [params (fun-params func)]
                             [argus (app-args fwae-ast)])
-                            (evaluaFunc func params oper argus))]
+                            (evaluaFunc params oper argus))]
     )
 )
 
@@ -263,24 +257,40 @@ Martinez Calzada Diego -  318275457
   (if (eq? (length l) 1)
       (not (first l))
       (error "error: Not requiere un parametro")))
+
+;; Funcion auxiliar de interp que evalua el with
+(define (evalWith expr bdgs)
+  (if (eq? 0 (length bdgs))
+      expr
+      (evalWith (subst (with-body expr) (binding-id (car bdgs)) (binding-value (car bdgs))) (rest bdgs))))
+
+#|
+(let* (
+                             [bdgs (with-bindings fwae-ast)]
+                             [primeros-bdgs (cdr bdgs)]
+                             [ultimo-bdg (car bdgs)])
+                             (interp (foldl (lambda (bdg)
+                               (subst (with-body fwae-ast) (binding-id bdg) (binding-value bdg)));; El lambda solo toma un argumento
+                             ; ultimo elemento para foldl
+                               ultimo-bdg
+                               primeros-bdgs)
+                             ))|#
+
   
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
-(define (evaluaFunc f params oper argus)
+(define (evaluaFunc params oper argus)
   (cond
-    [(not (fun? f)) (error "error: No es una funcion")]
     [(not (eq? (length params) (length argus))) (error "error: El numero de parametros es inadecuado")]
-    [else (interp (subst oper (map parse params) argus))]
+    [else (interp (subst-varios oper params argus))]
    )
 )
 
 
-;; Funcion auxiliar de evaluaFunc para sustituir los valores de los parametros y evaluar la funcion
-(define (sustParamArgs oper params values)
-  (let* (
-        [param (car params)]
-        [arg (car values)]
-        [newOper (subst oper param values)])
-    (sustParamArgs newOper (cdr params) (cdr values))))
+;; Funcion auxiliar de subst-varios para sustituir los valores de los parametros y evaluar la funcion
+(define (subst-varios oper ids valores)
+  (if (eq? 0 (length ids))
+      oper
+      (subst-varios (subst oper (first ids) (first valores)) (rest ids) (rest valores))))
         
 
 ;; 4. (1 pto). Indique con comentarios en todas las invocaciones a las funciones subst (Ejercicio 2) e interp (Ejercicio
