@@ -182,8 +182,8 @@ Martinez Calzada Diego -  318275457
                       [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))])]
     [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
-                             (interp (evalWith fwae-ast bdgs))
-                             ))]
+                             [cuerpo (with-body fwae-ast)])
+                             (interp (evalWith cuerpo bdgs)))]
     [(fun? fwae-ast) fwae-ast]
     [(app? fwae-ast) (let* (
                             [func (app-fun fwae-ast)]
@@ -262,7 +262,7 @@ Martinez Calzada Diego -  318275457
 (define (evalWith expr bdgs)
   (if (eq? 0 (length bdgs))
       expr
-      (evalWith (subst (with-body expr) (binding-id (car bdgs)) (binding-value (car bdgs))) (rest bdgs))))
+      (evalWith (subst expr (binding-id (car bdgs)) (binding-value (car bdgs))) (rest bdgs))))
 
 #|
 (let* (
@@ -291,7 +291,9 @@ Martinez Calzada Diego -  318275457
   (if (eq? 0 (length ids))
       oper
       (subst-varios (subst oper (first ids) (first valores)) (rest ids) (rest valores))))
-        
+
+
+;; ******************************************************************
 
 ;; 4. (1 pto). Indique con comentarios en todas las invocaciones a las funciones subst (Ejercicio 2) e interp (Ejercicio
 ;; 3) si su interprete tiene implementada evaluacion glotona o evaluacion perezosa y porque. Un interprete gloton
@@ -310,7 +312,15 @@ Martinez Calzada Diego -  318275457
 
 
 
+;; ******************************************************************
 
+;; 5. (1pto Extra). Funcion que calcula el area de una elipse en el lenguaje FWAE.
+;; * Precondiciones: dos numeros que representan respectivamente el eje semi-mayor y el eje semi-menor de la
+;;   elipse.
+;; * Postcondiciones: el area encerrada por la elpise con ejes semi-mayor y semi-menor dados.
+;; areaelipse: AST-num, AST-num -> number
+(define (areaelipse semi-mayor semi-menor)
+  (interp (parse '(app (fun (smay smen) (* 3.1415 smay smen)) semi-mayor semi-menor))))
 
 
 
