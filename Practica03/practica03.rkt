@@ -149,6 +149,9 @@ Martinez Calzada Diego -  318275457
     )
 )
 
+;; Funcion auxuliar que dice si un elemento esta en una lista
+;; * Precondiciones: una lista ls con el mismo tipo que v.
+;; * Postcondiciones: #t si esta, #f en otro caso.
 (define (esta-en-lista v ls)
   (if (empty? ls)
       #f
@@ -310,6 +313,12 @@ Martinez Calzada Diego -  318275457
    hace que sea perezoso>
 |#
 
+#| La composicion de funciones en las que se invoca primero a <interp>,
+   hace al interprete <perezoso>.
+   Esto se debe a que <primero hace la sustitucion, despues, si se
+   necesita, evalua hasta que sea necesario, es decir, en el momento
+   en el que se necesite el valor de un id.>
+|#
 
 
 ;; ******************************************************************
