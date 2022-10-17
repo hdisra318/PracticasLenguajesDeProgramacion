@@ -320,7 +320,7 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: el area encerrada por la elpise con ejes semi-mayor y semi-menor dados.
 ;; areaelipse: AST-num, AST-num -> number
 (define (areaelipse semi-mayor semi-menor)
-  (interp (parse '(app (fun (smay smen) (* 3.1415 smay smen)) semi-mayor semi-menor))))
+  (interp (parse '(app (fun (smay smen) (* pi smay smen)) semi-mayor semi-menor))))
 
 
 
