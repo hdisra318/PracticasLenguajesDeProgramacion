@@ -65,6 +65,14 @@ Martinez Calzada Diego -  318275457
               (parse (first body))
               (parse body)))
 
+;; Funcion auxiliar de parse que realiza el parse de la funcion de app
+(define (parseAppFun fun)
+  (cond
+    [(fun? fun) (parse fun)]
+    [(eq? '() fun) (parse fun)]
+    [else (error "error: No se le paso una funcion")]))
+
+
 
 ;; Tipo de dato para representar el Arbol de Sintaxis Abstracta (AST)
 (define-type AST
@@ -271,23 +279,11 @@ Martinez Calzada Diego -  318275457
       expr
       (evalWith (subst expr (binding-id (car bdgs)) (binding-value (car bdgs))) (rest bdgs))))
 
-#|
-(let* (
-                             [bdgs (with-bindings fwae-ast)]
-                             [primeros-bdgs (cdr bdgs)]
-                             [ultimo-bdg (car bdgs)])
-                             (interp (foldl (lambda (bdg)
-                               (subst (with-body fwae-ast) (binding-id bdg) (binding-value bdg)));; El lambda solo toma un argumento
-                             ; ultimo elemento para foldl
-                               ultimo-bdg
-                               primeros-bdgs)
-                             ))|#
-
 ;; Funcion auxiliar de interp que sustituye los ids en el resto de la lista de identificadores
 (define (interpBdgs bdgs bdgsAux)
   (if (eq? 1 (length bdgsAux))
       bdgs
-      (interpBdgs (cons (car bdgs) (interpBdg (car bdgs) (cdr bdgs))) (rest bdgsAux))))
+      (cons (car bdgs) (interpBdgs (interpBdg (car bdgs) (cdr bdgs)) (rest bdgsAux)))))
 
 ;; Funcion auxiliar de interpBdgs que sustituye el binding dado en la lista de indentificadores
 (define (interpBdg bdg body)
@@ -295,7 +291,7 @@ Martinez Calzada Diego -  318275457
      body
      (cons (substBdg bdg (car body)) (interpBdg bdg (rest body)))))
 
-;; Funcion que hace el subst de un binding a otro binding
+;; Funcion auxiliar de interpBdg que hace el subst de un binding a otro binding
 (define (substBdg bdg1 bdg2)
   (binding (binding-id bdg2) (subst (binding-value bdg2) (binding-id bdg1) (binding-value bdg1))))
 
