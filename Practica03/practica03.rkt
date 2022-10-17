@@ -188,8 +188,9 @@ Martinez Calzada Diego -  318275457
                              (interp (evalWith cuerpo bdgs)))]
     [(with*? fwae-ast) (let* (
                              [bdgs (with*-bindings fwae-ast)]
-                             [cuerpo (with*-body fwae-ast)])
-                             (interpBdgs bdgs bdgs))]
+                             [cuerpo (with*-body fwae-ast)]
+                             [newBdgs (interpBdgs bdgs bdgs)])
+                             (interp (evalWith cuerpo newBdgs)))]
     [(fun? fwae-ast) fwae-ast]
     [(app? fwae-ast) (let* (
                             [func (app-fun fwae-ast)]
@@ -282,13 +283,6 @@ Martinez Calzada Diego -  318275457
                                primeros-bdgs)
                              ))|#
 
-
-;; Funcion auxiliar de interp que evalua el with*
-(define (evalWith* expr bdgs values)
-  (if (eq? 0 (length bdgs))
-      expr
-      (evalWith (subst expr (car bdgs) (car values)) (rest bdgs) (rest values))))
-
 ;; Funcion auxiliar de interp que sustituye los ids en el resto de la lista de identificadores
 (define (interpBdgs bdgs bdgsAux)
   (if (eq? 0 (length bdgsAux))
@@ -297,9 +291,9 @@ Martinez Calzada Diego -  318275457
 
 ;; Funcion auxiliar de interpBdgs que sustituye el binding dado en la lista de indentificadores
 (define (interpBdg bdg body bodyAux)
-  (if(eq? 1 (length bodyAux))
+  (if(eq? 0 (length bodyAux))
      body
-     (interpBdg bdg (subst (binding-value (car body)) (binding-id bdg) (binding-value bdg))) (rest bodyAux)))
+     (interpBdg bdg (subst (binding-value (car body)) (binding-id bdg) (binding-value bdg)) (rest bodyAux))))
 
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
