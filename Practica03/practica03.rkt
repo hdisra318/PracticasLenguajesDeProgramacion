@@ -285,15 +285,21 @@ Martinez Calzada Diego -  318275457
 
 ;; Funcion auxiliar de interp que sustituye los ids en el resto de la lista de identificadores
 (define (interpBdgs bdgs bdgsAux)
-  (if (eq? 0 (length bdgsAux))
+  (if (eq? 1 (length bdgsAux))
       bdgs
-      (interpBdgs (interpBdg (car bdgs) (cdr bdgs) (cdr bdgs)) (rest bdgsAux))))
+      (interpBdgs (cons (car bdgs) (interpBdg (car bdgs) (cdr bdgs))) (rest bdgsAux))))
 
 ;; Funcion auxiliar de interpBdgs que sustituye el binding dado en la lista de indentificadores
-(define (interpBdg bdg body bodyAux)
-  (if(eq? 0 (length bodyAux))
+(define (interpBdg bdg body)
+  (if(eq? 0 (length body))
      body
-     (interpBdg bdg (subst (binding-value (car body)) (binding-id bdg) (binding-value bdg)) (rest bodyAux))))
+     (cons (substBdg bdg (car body)) (interpBdg bdg (rest body)))))
+
+;; Funcion que hace el subst de un binding a otro binding
+(define (substBdg bdg1 bdg2)
+  (binding (binding-id bdg2) (subst (binding-value bdg2) (binding-id bdg1) (binding-value bdg1))))
+
+
 
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
