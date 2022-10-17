@@ -149,6 +149,9 @@ Martinez Calzada Diego -  318275457
     )
 )
 
+;; Funcion auxuliar que dice si un elemento esta en una lista
+;; * Precondiciones: una lista ls con el mismo tipo que v.
+;; * Postcondiciones: #t si esta, #f en otro caso.
 (define (esta-en-lista v ls)
   (if (empty? ls)
       #f
@@ -310,6 +313,12 @@ Martinez Calzada Diego -  318275457
    hace que sea perezoso>
 |#
 
+#| La composicion de funciones en las que se invoca primero a <interp>,
+   hace al interprete <perezoso>.
+   Esto se debe a que <primero hace la sustitucion, despues, si se
+   necesita, evalua hasta que sea necesario, es decir, en el momento
+   en el que se necesite el valor de un id.>
+|#
 
 
 ;; ******************************************************************
@@ -319,8 +328,14 @@ Martinez Calzada Diego -  318275457
 ;;   elipse.
 ;; * Postcondiciones: el area encerrada por la elpise con ejes semi-mayor y semi-menor dados.
 ;; areaelipse: AST-num, AST-num -> number
-(define (areaelipse semi-mayor semi-menor)
-  (interp (parse '(app (fun (smay smen) (* pi smay smen)) semi-mayor semi-menor))))
 
+#|
+(define (areaelipse semi-mayor semi-menor)
+  (interp (parse '(app (fun (smay smen) (* 3.1415 smay smen)) semi-mayor semi-menor))))
+|#
+
+(define (areaelipse semi-mayor semi-menor)
+  (interp (app (fun '(x y) (op * (list (num 3.1416) (id 'x) (id 'y)))) (list semi-mayor semi-menor) ))
+)
 
 
