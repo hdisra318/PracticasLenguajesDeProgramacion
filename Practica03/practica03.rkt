@@ -49,11 +49,15 @@ Martinez Calzada Diego -  318275457
           [(with) (with (map appBinding (second sexp)) (parse (third sexp)))]
           [(with*) (with* (map appBinding (second sexp)) (parse (third sexp)))]
           [(fun) (fun (second sexp) (funBody (third sexp)))]
-          [(app) (app (parse (second sexp)) (map parse (rest (rest sexp))))]
+          [(app)
+           (if (equal? 'fun (first (second sexp)))
+               (app (parse (second sexp)) (map parse (rest (rest sexp))))
+               (error "No hay una funcion")
+           )
+          ]
      )]
     )
   )
-
 
 ;; Funcion auxiliar de parse que transforma a binding la pareja pasada
 (define (appBinding pareja)
@@ -64,14 +68,6 @@ Martinez Calzada Diego -  318275457
   (if (empty? (rest body))
               (parse (first body))
               (parse body)))
-
-;; Funcion auxiliar de parse que realiza el parse de la funcion de app
-(define (parseAppFun fun)
-  (cond
-    [(fun? fun) (parse fun)]
-    [(eq? '() fun) (parse fun)]
-    [else (error "error: No se le paso una funcion")]))
-
 
 
 ;; Tipo de dato para representar el Arbol de Sintaxis Abstracta (AST)
@@ -90,15 +86,15 @@ Martinez Calzada Diego -  318275457
 (define-type Binding
   [binding (id symbol?) (value AST?)]
 )
-  
+
 
 ;; ******************************************************************
 
 ;; 2. (3pts) Funcion que realiza la sustitucion fwae-expr[sub-id:=value];
-;; es decir, reemplaza cada ocurrencia de la variable sub-id en la expresión fwae-expr por otra expresión value.
-;; * Precondiciones: una expresión FWAE representada en un AST, un símbolo a sustituir y otra expresión FWAE
-;;   (AST) para sustituir el símbolo.
-;; * Postcondiciones: una expresión FWAE representada como AST con el símbolo sustituido por la segunda expresión
+;; es decir, reemplaza cada ocurrencia de la variable sub-id en la expresion fwae-expr por otra expresion value.
+;; * Precondiciones: una expresion FWAE representada en un AST, un simbolo a sustituir y otra expresion FWAE
+;;   (AST) para sustituir el simbolo.
+;; * Postcondiciones: una expresion FWAE representada como AST con el simbolo sustituido por la segunda expresion
 ;;   FWAE.
 ;; subst: AST, symbol, AST -> AST
 (define (subst fwae-ast sub-id valor)
@@ -156,7 +152,7 @@ Martinez Calzada Diego -  318275457
     )
 )
 
-;; Funcion auxuliar que dice si un elemento esta en una lista
+;; Funcion auxuliar de subst que dice si un elemento esta en una lista
 ;; * Precondiciones: una lista ls con el mismo tipo que v.
 ;; * Postcondiciones: #t si esta, #f en otro caso.
 (define (esta-en-lista v ls)
@@ -175,7 +171,7 @@ Martinez Calzada Diego -  318275457
 ;; 3. (3pts) Funcion que evalua la expresion FWAE dada.
 ;; * Precondiciones: una expresion FWAE en su representacion como Arbol de Sintaxis Abstracta (AST).
 ;; * Postcondiciones: un numero, booleano o función en su representacion como Arbol de Sintaxis Abstracta
-;;   (AST) a la que se reduce la expresión FWAE dada tras ser evaluada.
+;;   (AST) a la que se reduce la expresion FWAE dada tras ser evaluada.
 ;; interp: AST -> number U boolean U AST-fun
 (define (interp fwae-ast)
   (cond
@@ -295,8 +291,6 @@ Martinez Calzada Diego -  318275457
 (define (substBdg bdg1 bdg2)
   (binding (binding-id bdg2) (subst (binding-value bdg2) (binding-id bdg1) (binding-value bdg1))))
 
-
-
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
   (cond
@@ -305,8 +299,7 @@ Martinez Calzada Diego -  318275457
    )
 )
 
-
-;; Funcion auxiliar de subst-varios para sustituir los valores de los parametros y evaluar la funcion
+;; Funcion auxiliar de evaluaFunc para sustituir los valores de los parametros y evaluar la funcion
 (define (subst-varios oper ids valores)
   (if (eq? 0 (length ids))
       oper
