@@ -93,7 +93,6 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: una expresión FWAE representada como AST con el símbolo sustituido por la segunda expresión
 ;;   FWAE.
 ;; subst: AST, symbol, AST -> AST
-
 (define (subst fwae-ast sub-id valor)
   (define (subst-aux op-aux)
     (subst op-aux sub-id valor)
@@ -173,20 +172,24 @@ Martinez Calzada Diego -  318275457
 (define (interp fwae-ast)
   (cond
     [(id? fwae-ast) (error "error: Variable libre")]
-    [(num? fwae-ast) fwae-ast]
-    [(bool? fwae-ast) fwae-ast]
+    [(num? fwae-ast) (num-n fwae-ast)]
+    [(bool? fwae-ast) (bool-b fwae-ast)]
     [(op? fwae-ast) (cond
-                      [(eq? + (op-f fwae-ast)) (operSum (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? - (op-f fwae-ast)) (operRes (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? * (op-f fwae-ast)) (operProd (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? / (op-f fwae-ast)) (operDiv (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? modulo (op-f fwae-ast)) (operMod (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? expt (op-f fwae-ast)) (operExpt (map num-n (map interp (op-args fwae-ast))))]
-                      [(eq? not (op-f fwae-ast)) (operNot (map bool-b (map interp (op-args fwae-ast))))])]
+                      [(eq? + (op-f fwae-ast)) (operSum (map interp (op-args fwae-ast)))]
+                      [(eq? - (op-f fwae-ast)) (operRes (map interp (op-args fwae-ast)))]
+                      [(eq? * (op-f fwae-ast)) (operProd (map interp (op-args fwae-ast)))]
+                      [(eq? / (op-f fwae-ast)) (operDiv (map interp (op-args fwae-ast)))]
+                      [(eq? modulo (op-f fwae-ast)) (operMod (map interp (op-args fwae-ast)))]
+                      [(eq? expt (op-f fwae-ast)) (operExpt (map interp (op-args fwae-ast)))]
+                      [(eq? not (op-f fwae-ast)) (operNot (map interp (op-args fwae-ast)))])]
     [(with? fwae-ast) (let* (
                              [bdgs (with-bindings fwae-ast)]
                              [cuerpo (with-body fwae-ast)])
                              (interp (evalWith cuerpo bdgs)))]
+    [(with*? fwae-ast) (let* (
+                             [bdgs (with*-bindings fwae-ast)]
+                             [cuerpo (with*-body fwae-ast)])
+                             (interpBdgs bdgs bdgs))]
     [(fun? fwae-ast) fwae-ast]
     [(app? fwae-ast) (let* (
                             [func (app-fun fwae-ast)]
@@ -213,7 +216,7 @@ Martinez Calzada Diego -  318275457
 ;;   un error.
 (define (operRes l)
   (if (> (length l) 1)
-      (foldl - 0 l)
+      (foldr - 0 l)
       (error "error: - requiere mas de un parametro")))
 
 ;; Funcion auxuliar de interp que realiza la operacion de producto sobre una lista de numeros.
@@ -231,7 +234,7 @@ Martinez Calzada Diego -  318275457
 ;;   un error.
 (define (operDiv l)
   (if (eq? (length l) 2)
-      (foldl / 1 l)
+      (foldr / 1 l)
       (error "error: / requiere dos parametros")))
 
 ;; Funcion auxuliar de interp que realiza la operacion de modulo sobre una lista de numeros
@@ -279,7 +282,25 @@ Martinez Calzada Diego -  318275457
                                primeros-bdgs)
                              ))|#
 
-  
+
+;; Funcion auxiliar de interp que evalua el with*
+(define (evalWith* expr bdgs values)
+  (if (eq? 0 (length bdgs))
+      expr
+      (evalWith (subst expr (car bdgs) (car values)) (rest bdgs) (rest values))))
+
+;; Funcion auxiliar de interp que sustituye los ids en el resto de la lista de identificadores
+(define (interpBdgs bdgs bdgsAux)
+  (if (eq? 0 (length bdgsAux))
+      bdgs
+      (interpBdgs (interpBdg (car bdgs) (cdr bdgs) (cdr bdgs)) (rest bdgsAux))))
+
+;; Funcion auxiliar de interpBdgs que sustituye el binding dado en la lista de indentificadores
+(define (interpBdg bdg body bodyAux)
+  (if(eq? 1 (length bodyAux))
+     body
+     (interpBdg bdg (subst (binding-value (car body)) (binding-id bdg) (binding-value bdg))) (rest bodyAux)))
+
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
   (cond
@@ -328,12 +349,6 @@ Martinez Calzada Diego -  318275457
 ;;   elipse.
 ;; * Postcondiciones: el area encerrada por la elpise con ejes semi-mayor y semi-menor dados.
 ;; areaelipse: AST-num, AST-num -> number
-
-#|
-(define (areaelipse semi-mayor semi-menor)
-  (interp (parse '(app (fun (smay smen) (* 3.1415 smay smen)) semi-mayor semi-menor))))
-|#
-
 (define (areaelipse semi-mayor semi-menor)
   (interp (app (fun '(x y) (op * (list (num 3.1416) (id 'x) (id 'y)))) (list semi-mayor semi-menor) ))
 )
