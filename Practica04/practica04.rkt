@@ -55,3 +55,67 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: si la s-expression de entrada satisface la gramática del lenguaje FWAEL; devuelve un árbol
 ;;   de sintaxis abstracta AST, de lo contrario, enviar un error.
 ;; parse: s-expression -> AST
+(define (parse sexp)
+  (define (parse-op opsexp)
+    (let (
+          [operador (case (first opsexp)
+
+                      [(+) +]
+                      [(-) -]
+                      [(*) *]
+                      [(/) /]
+                      [(modulo) modulo]
+                      [(expt) expt]
+                      [(not) not])])
+      (op operador (map parse (rest opsexp)))
+      )
+    
+  )
+  (cond
+    [(symbol? sexp)
+        (case sexp
+          [(T) (bool #t)]
+          [(F) (bool #f)]
+          [else (id sexp)]
+          )]
+    [(number? sexp) (num sexp)]
+    [(list? sexp) (case (first sexp)
+          [(+ - * / modulo expt not) (parse-op sexp)]
+          [(with) (with (map appBinding (second sexp)) (parse (third sexp)))]
+          [(with*) (with* (map appBinding (second sexp)) (parse (third sexp)))]
+          [(fun) (fun (second sexp) (funBody (third sexp)))]
+          [(app)
+           (if (equal? 'fun (first (second sexp)))
+               (app (parse (second sexp)) (map parse (rest (rest sexp))))
+               (error "No hay una funcion")
+           )
+          ]
+     )]
+    )
+  )
+
+
+
+
+;; 2
+
+;; 3
+
+;; 4
+
+;;   INTERP
+
+(define (interp fwael-expr env)
+  (cond
+    [(id? fwael-expr) #f]
+    ;; TODO LO DEMAS
+    [(app? fwael-expr) (let* (
+        [apped-fun (app-fun fwael-expr)]
+        [args (app-args fwael-expr)]
+        [fun-arg (first (fun-params apped-fun))]
+        [env (aSub fun-arg (first args) env)])
+        (interp (subst apped-fun fun-arg env) env)
+      )]
+    [else ("Error de sintaxis")]
+  )
+)
