@@ -128,7 +128,84 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: Una expresión FWAEL sin azucar sintáctica representada en un AST.
 ;;   desugar: AST -> AST
 
+(define (desugar s-fwael-expr)
+  (cond
+    [(id? s-fwael-expr) s-fwael-expr]
+    [(num? s-fwael-expr) s-fwael-expr]
+    [(bool? s-fwael-expr) s-fwael-expr]
+    [(op? s-fwael-expr)
+     (op (op-f s-fwael-expr) (desugar-list (op-args s-fwael-expr)))]
+                          ;;[(eq? + (op-f s-fwael-expr)) (op + (desugar-list (op-args s-fwael-expr)))]
+    [(op-bool? s-fwael-expr)
+     (op-bool (op-bool-f s-fwael-expr) (desugar-list (op-bool-larg s-fwael-expr)) (desugar-list (op-bool-rarg s-fwael-expr)))]
+    [(with? s-fwael-expr)
+     (app (fun (list (binding-id (first (with-bindings s-fwael-expr)))) (desugar (with-body s-fwael-expr)))
+          (list (desugar (binding-value (first (with-bindings s-fwael-expr))))))]
+    [(with*? s-fwael-expr) (desugar-mw s-fwael-expr)]
+    [(fun? s-fwael-expr) (desugar-fun s-fwael-expr)]
+    [(lempty? s-fwael-expr) s-fwael-expr]
+    [(lcons? s-fwael-expr) (lcons (desugar (lcons-l s-fwael-expr))
+                                  (desugar (lcons-r s-fwael-expr)))]
+    [(lcar? s-fwael-expr) (lcar (desugar (lcar-lst s-fwael-expr)))]
+    [(lcdr? s-fwael-expr) (lcdr (desugar (lcdr-lst s-fwael-expr)))]
+    [(app? s-fwael-expr)
+     (desugar-app s-fwael-expr)]
+  )
+)
 
+;; EJEMPLO DE OP
+;; (op + (list (num 3) (num 3)))
+;; EJEMPLO DE WITH*
+;; (with* (list (binding 'x (num 4)) (binding 'y (num 3))) (op + (list (id 'x) (id 'y))))
+;; EJEMPLO DE FUN
+;; (fun (list 'x 'y) (op + (list (id 'x) (id 'y))))
+;; EJEMPLO DE APP
+;; (app (fun (list 'x 'y) (op + (list (id 'x) (id 'y)))) (list (num 2) (num 3)))
+
+;; Funcion auxiliar que dado una lista de AST realiza desugar de cada elemento 
+(define (desugar-list ls)
+  (if (empty? ls)
+      '()
+      (cons (desugar (first ls)) (desugar-list (cdr ls)))
+  )
+)
+
+;; Funcion auxiliar que dado un with* realiza su desugar 
+(define (desugar-mw mw)
+  (if (eq? 1 (length (with*-bindings mw)))
+      (with (desugar-bs (with*-bindings mw)) (desugar (with*-body mw)))
+      (with (desugar-bs (list (first (with*-bindings mw))))
+            (desugar-mw (with* (cdr (with*-bindings mw)) (desugar (with*-body mw)))))
+  )
+)
+
+;; Funcion auxiliar que dado una lista de binding realiza el desugar de los values 
+(define (desugar-bs bs)
+  (if (eq? 0 (length bs))
+      '()
+      (cons (binding (binding-id (first bs)) (desugar (binding-value (first bs)))) (desugar-bs (cdr bs)))
+  )
+)
+
+;; Funcion auxiliar que dado una fun realiza su desugar
+(define (desugar-fun func)
+  (if (eq? 1 (length (fun-params func)))
+      (fun (fun-params func) (desugar (fun-body func)))
+      (fun (list (first (fun-params func)))
+           (desugar-fun (fun (cdr (fun-params func)) (fun-body func))))
+  )
+)
+
+;; Funcion auxiliar que dado una app realiza su desugar
+(define (desugar-app ap)
+  (if (eq? 1 (length (app-args ap)))
+      (app (desugar-fun (app-fun ap)) (desugar-list (app-args ap)))
+      (app (fun (list (first (fun-params (app-fun ap)))) (desugar-app (app (fun (cdr (fun-params (app-fun ap)))
+                                                                                (fun-body (app-fun ap)))
+                                                                           (cdr (app-args ap)))))
+           (list (desugar (first (app-args ap)))))
+  )
+)
 
 
 
