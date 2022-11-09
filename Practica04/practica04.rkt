@@ -247,7 +247,7 @@ Martinez Calzada Diego -  318275457
          (op-bool (op-bool-f fwael-expr) (subst-list (op-bool-larg fwael-expr) sub-id env)
                                          (subst-list (op-bool-rarg fwael-expr) sub-id env))]
         [(fun? fwael-expr) (subst-fun fwael-expr sub-id env)]
-        [(app? fwael-expr) (app (subst (app-fun fwael-expr) sub-id env) (subst-list (app-args fwael-expr) sub-id env))]
+        [(app? fwael-expr) (subst-app fwael-expr sub-id env)]
         [(lcons? fwael-expr) (lcons (subst (lcons-l fwael-expr) sub-id env) (subst (lcons-r fwael-expr) sub-id env))]
         [(lcar? fwael-expr) (lcar (subst (lcar-lst fwael-expr) sub-id env))]
         [(lcdr? fwael-expr) (lcdr (subst (lcdr-lst fwael-expr) sub-id env))]
@@ -268,6 +268,16 @@ Martinez Calzada Diego -  318275457
   (if (eq? i (first (fun-params f)))
       (subst (fun-body f) i env)
       (fun (fun-params f) (subst (fun-body f) i env))
+  )
+)
+
+;; Funcion auxiliar que hace subst de una app
+(define (subst-app ap i env)
+  (if (eq? i (first (fun-params (app-fun ap))))
+      (subst (app-fun ap) i env)
+      (subst (subst (app-fun ap) (first (fun-params (app-fun ap))) (aSub (first (fun-params (app-fun ap)))
+                                                                  (first (app-args ap))
+                                                                  (aSub (first (fun-params (app-fun ap))) (first (app-args ap)) env))) i env)
   )
 )
 
