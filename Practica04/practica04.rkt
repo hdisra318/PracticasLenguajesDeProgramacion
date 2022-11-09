@@ -141,7 +141,7 @@ Martinez Calzada Diego -  318275457
     [(with? s-fwael-expr)
      (app (fun (list (binding-id (first (with-bindings s-fwael-expr)))) (desugar (with-body s-fwael-expr)))
           (list (desugar (binding-value (first (with-bindings s-fwael-expr))))))]
-    [(with*? s-fwael-expr) (desugar-mw s-fwael-expr)]
+    [(with*? s-fwael-expr) (desugar (desugar-mw s-fwael-expr))]
     [(fun? s-fwael-expr) (desugar-fun s-fwael-expr)]
     [(lempty? s-fwael-expr) s-fwael-expr]
     [(lcons? s-fwael-expr) (lcons (desugar (lcons-l s-fwael-expr))
@@ -161,6 +161,7 @@ Martinez Calzada Diego -  318275457
 ;; (fun (list 'x 'y) (op + (list (id 'x) (id 'y))))
 ;; EJEMPLO DE APP
 ;; (app (fun (list 'x 'y) (op + (list (id 'x) (id 'y)))) (list (num 2) (num 3)))
+;; (app (fun '(x) (app (fun '(y) (op + (list (id 'x) (id 'y)))) (list (id 'z)))) (list (num 2)))
 
 ;; Funcion auxiliar que dado una lista de AST realiza desugar de cada elemento 
 (define (desugar-list ls)
@@ -224,8 +225,51 @@ Martinez Calzada Diego -  318275457
 ;;   parametro formal no se encuentre en el ambiente, envia un error.
 ;; subst: AST, Environment -> AST
 
+(define (subst fwael-expr sub-id env)
+    (define (find-inenv env)
+        (if (mtSub? env)
+            (error "Error" sub-id "es una variable libre")
+            (if (eq? (aSub-name env) sub-id)
+                (aSub-value env)
+                (find-inenv (aSub-bSub env))
+            )
+        )
+    )
+    (cond
+        [(id? fwael-expr) (if (eq? sub-id (id-i fwael-expr))
+                              (find-inenv env)
+                              fwael-expr)]
+        [(num? fwael-expr) fwael-expr]
+        [(bool? fwael-expr) fwael-expr]
+        [(op? fwael-expr)
+         (op (op-f fwael-expr) (subst-list (op-args fwael-expr) sub-id env))]
+        [(op-bool? fwael-expr)
+         (op-bool (op-bool-f fwael-expr) (subst-list (op-bool-larg fwael-expr) sub-id env)
+                                         (subst-list (op-bool-rarg fwael-expr) sub-id env))]
+        [(fun? fwael-expr) (subst-fun fwael-expr sub-id env)]
+        [(app? fwael-expr) (app (subst (app-fun fwael-expr) sub-id env) (subst-list (app-args fwael-expr) sub-id env))]
+        [(lcons? fwael-expr) (lcons (subst (lcons-l fwael-expr) sub-id env) (subst (lcons-r fwael-expr) sub-id env))]
+        [(lcar? fwael-expr) (lcar (subst (lcar-lst fwael-expr) sub-id env))]
+        [(lcdr? fwael-expr) (lcdr (subst (lcdr-lst fwael-expr) sub-id env))]
+        [else fwael-expr]
+    )
+)
 
+;; Funcion auxiliar que realiza subs en una lista de elementos AST sin azucar sintactica
+(define (subst-list ls i env)
+  (if (empty? ls)
+      '()
+      (cons (subst (first ls) i env) (subst-list (cdr ls) i env))
+  )
+)
 
+;; Funcion auxiliar que hace subst de una fun
+(define (subst-fun f i env)
+  (if (eq? i (first (fun-params f)))
+      (subst (fun-body f) i env)
+      (fun (fun-params f) (subst (fun-body f) i env))
+  )
+)
 
 
 ;; ******************************************************************
