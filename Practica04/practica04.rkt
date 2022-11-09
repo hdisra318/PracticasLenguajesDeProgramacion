@@ -127,7 +127,6 @@ Martinez Calzada Diego -  318275457
 ;; * Precondiciones: Una expresion FWAEL en su representacion como AST.
 ;; * Postcondiciones: Una expresión FWAEL sin azucar sintáctica representada en un AST.
 ;;   desugar: AST -> AST
-
 (define (desugar s-fwael-expr)
   (cond
     [(id? s-fwael-expr) s-fwael-expr]
@@ -224,7 +223,6 @@ Martinez Calzada Diego -  318275457
 ;;   dada por el parámetro real que deberia estar en el ambiente. En caso de que el
 ;;   parametro formal no se encuentre en el ambiente, envia un error.
 ;; subst: AST, Environment -> AST
-
 (define (subst fwael-expr sub-id env)
     (define (find-inenv env)
         (if (mtSub? env)
@@ -293,12 +291,12 @@ Martinez Calzada Diego -  318275457
 ;; interp: AST, Environment -> FWAEL-Value
 (define (interp fwael-expr env)
   (cond
-    ;;[(id? fwael-expr) #f]
     [(id? fwael-expr) (error "error: Variable libre")]
     [(num? fwael-expr) (numV (num-n fwael-expr))]
+    [(lempty? fwael-expr) (listV empty)]
     [(bool? fwael-expr) (boolV (bool-b fwael-expr))]
     [(op? fwael-expr) (cond
-                      [(eq? + (op-f fwael-expr)) (operSum (map interp (op-args fwael-expr)))]
+                      [(eq? + (op-f fwael-expr)) (interp (parse (operSum (interpOp (op-args fwael-expr) env))) env)]
                       [(eq? - (op-f fwael-expr)) (operRes (map interp (op-args fwael-expr)))]
                       [(eq? * (op-f fwael-expr)) (operProd (map interp (op-args fwael-expr)))]
                       [(eq? / (op-f fwael-expr)) (operDiv (map interp (op-args fwael-expr)))]
@@ -315,6 +313,10 @@ Martinez Calzada Diego -  318275457
                              [newBdgs (interpBdgs bdgs bdgs)])
                              (interp (evalWith cuerpo newBdgs)))]
     [(fun? fwael-expr) fwael-expr]
+    [(lcons? fwael-expr) (let (
+                               [l-expr (interp (lcons-l fwael-expr) env)]
+                               [r-expr (interp (lcons-r fwael-expr) env)])
+                           (listV (list l-expr r-expr)))]
     [(app? fwael-expr) (let* (
         [apped-fun (app-fun fwael-expr)]
         [args (app-args fwael-expr)]
@@ -326,6 +328,24 @@ Martinez Calzada Diego -  318275457
   )
 )
 
+
+
+;; Funcion auxiliar de interp que realiza el interp de las operaciones
+;; * Precondiciones:
+;; * Postcondiciones:
+(define (interpOp args env)
+  (if (empty? args)
+      '()
+      (cons (interp-op (car args)) (interpOp (cdr args) env))))
+
+
+;; Funcion auxiliar de interp que aplica el interp a los numeros para las operaciones
+(define (interp-num fwae-ast)
+  (cond
+    [(id? fwae-ast) (error "error: Variable libre")]
+    [(num? fwae-ast) (num-n fwae-ast)]
+    [(bool? fwae-ast) (bool-b fwae-ast)]
+    ))
 
 ;; Funcion auxuliar de interp que realiza la operacion de suma sobre una lista de numeros.
 ;; * Precondiciones: una lista de numeros de tamano mayor a 1.
