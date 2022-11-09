@@ -241,8 +241,8 @@ Martinez Calzada Diego -  318275457
   (cond
     ;;[(id? fwael-expr) #f]
     [(id? fwael-expr) (error "error: Variable libre")]
-    [(num? fwael-expr) (num-n fwael-expr)]
-    [(bool? fwael-expr) (bool-b fwael-expr)]
+    [(num? fwael-expr) (numV (num-n fwael-expr))]
+    [(bool? fwael-expr) (boolV (bool-b fwael-expr))]
     [(op? fwael-expr) (cond
                       [(eq? + (op-f fwael-expr)) (operSum (map interp (op-args fwael-expr)))]
                       [(eq? - (op-f fwael-expr)) (operRes (map interp (op-args fwael-expr)))]
