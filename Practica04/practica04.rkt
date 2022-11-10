@@ -136,7 +136,7 @@ Martinez Calzada Diego -  318275457
      (op (op-f s-fwael-expr) (desugar-list (op-args s-fwael-expr)))]
                           ;;[(eq? + (op-f s-fwael-expr)) (op + (desugar-list (op-args s-fwael-expr)))]
     [(op-bool? s-fwael-expr)
-     (op-bool (op-bool-f s-fwael-expr) (desugar-list (op-bool-larg s-fwael-expr)) (desugar-list (op-bool-rarg s-fwael-expr)))]
+     (op-bool (op-bool-f s-fwael-expr) (desugar (op-bool-larg s-fwael-expr)) (desugar (op-bool-rarg s-fwael-expr)))]
     [(with? s-fwael-expr)
      (app (fun (list (binding-id (first (with-bindings s-fwael-expr)))) (desugar (with-body s-fwael-expr)))
           (list (desugar (binding-value (first (with-bindings s-fwael-expr))))))]
@@ -242,8 +242,8 @@ Martinez Calzada Diego -  318275457
         [(op? fwael-expr)
          (op (op-f fwael-expr) (subst-list (op-args fwael-expr) sub-id env))]
         [(op-bool? fwael-expr)
-         (op-bool (op-bool-f fwael-expr) (subst-list (op-bool-larg fwael-expr) sub-id env)
-                                         (subst-list (op-bool-rarg fwael-expr) sub-id env))]
+         (op-bool (op-bool-f fwael-expr) (subst (op-bool-larg fwael-expr) sub-id env)
+                                         (subst (op-bool-rarg fwael-expr) sub-id env))]
         [(fun? fwael-expr) (subst-fun fwael-expr sub-id env)]
         [(app? fwael-expr) (subst-app fwael-expr sub-id env)]
         [(lcons? fwael-expr) (lcons (subst (lcons-l fwael-expr) sub-id env) (subst (lcons-r fwael-expr) sub-id env))]
@@ -297,26 +297,22 @@ Martinez Calzada Diego -  318275457
     [(bool? fwael-expr) (boolV (bool-b fwael-expr))]
     [(op? fwael-expr) (cond
                       [(eq? + (op-f fwael-expr)) (interp (parse (operSum (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? - (op-f fwael-expr)) (operRes (map interp (op-args fwael-expr)))]
-                      [(eq? * (op-f fwael-expr)) (operProd (map interp (op-args fwael-expr)))]
-                      [(eq? / (op-f fwael-expr)) (operDiv (map interp (op-args fwael-expr)))]
-                      [(eq? modulo (op-f fwael-expr)) (operMod (map interp (op-args fwael-expr)))]
-                      [(eq? expt (op-f fwael-expr)) (operExpt (map interp (op-args fwael-expr)))]
-                      [(eq? not (op-f fwael-expr)) (operNot (map interp (op-args fwael-expr)))])]
-    [(with? fwael-expr) (let* (
-                             [bdgs (with-bindings fwael-expr)]
-                             [cuerpo (with-body fwael-expr)])
-                             (interp (evalWith cuerpo bdgs)))]
-    [(with*? fwael-expr) (let* (
-                             [bdgs (with*-bindings fwael-expr)]
-                             [cuerpo (with*-body fwael-expr)]
-                             [newBdgs (interpBdgs bdgs bdgs)])
-                             (interp (evalWith cuerpo newBdgs)))]
-    [(fun? fwael-expr) fwael-expr]
+                      [(eq? - (op-f fwael-expr)) (interp (parse (operRes (interpOp (op-args fwael-expr) env))) env)]
+                      [(eq? * (op-f fwael-expr)) (interp (parse (operProd (interpOp (op-args fwael-expr) env))) env)]
+                      [(eq? / (op-f fwael-expr)) (interp (parse (operDiv (interpOp (op-args fwael-expr) env))) env)]
+                      [(eq? modulo (op-f fwael-expr)) (interp (parse (operMod (interpOp (op-args fwael-expr) env))) env)]
+                      [(eq? expt (op-f fwael-expr)) (interp (parse (operExpt (interpOp (op-args fwael-expr) env))) env)]
+                      [(eq? not (op-f fwael-expr)) (interp (bool (operNot (interpOp (op-args fwael-expr) env))) env)])]
+    [(op-bool? fwael-expr) (cond
+                            [(eq? 'or (op-bool-f fwael-expr)) (interp (bool (or (interp-val (op-bool-larg fwael-expr)) (interp-val (op-bool-rarg fwael-expr)))) env)]
+                            [(eq? 'and (op-bool-f fwael-expr)) (interp (bool (and (interp-val (op-bool-larg fwael-expr)) (interp-val (op-bool-rarg fwael-expr)))) env)])]
+    [(fun? fwael-expr) (closureV (fun-params fwael-expr) (fun-body fwael-expr) env)]
     [(lcons? fwael-expr) (let (
                                [l-expr (interp (lcons-l fwael-expr) env)]
                                [r-expr (interp (lcons-r fwael-expr) env)])
                            (listV (list l-expr r-expr)))]
+    [(lcar? fwael-expr) (interp (lcons-l (lcar-lst fwael-expr)) env)]
+    [(lcdr? fwael-expr) (interp (lcons-r (lcdr-lst fwael-expr)) env)]
     [(app? fwael-expr) (let* (
         [apped-fun (app-fun fwael-expr)]
         [args (app-args fwael-expr)]
@@ -330,17 +326,18 @@ Martinez Calzada Diego -  318275457
 
 
 
-;; Funcion auxiliar de interp que realiza el interp de las operaciones
-;; * Precondiciones:
-;; * Postcondiciones:
+;; Funcion auxiliar de interp que convierte a valores de Racket los valores de tipo FWAEL.
+;; * Precondiciones: lista de valores de tipo FWAEL
+;; * Postcondiciones: lista de valores de Racket 
 (define (interpOp args env)
   (if (empty? args)
-      '()
-      (cons (interp-op (car args)) (interpOp (cdr args) env))))
+      '() ;; interp <- Para operaciones de (+ 3 (op + (..))
+      (cons (interp-val (car args) env) (interpOp (cdr args) env))))
 
-
-;; Funcion auxiliar de interp que aplica el interp a los numeros para las operaciones
-(define (interp-num fwae-ast)
+;; Funcion auxiliar de interp que convierte un a valor de Racket el valor de tipo FWAEL.
+;; * Precondiciones: valor de tipo FWAEL
+;; * Postcondciones: valor transformado a Racket
+(define (interp-val fwae-ast)
   (cond
     [(id? fwae-ast) (error "error: Variable libre")]
     [(num? fwae-ast) (num-n fwae-ast)]
@@ -410,27 +407,12 @@ Martinez Calzada Diego -  318275457
       (not (first l))
       (error "error: Not requiere un parametro")))
 
-;; Funcion auxiliar de interp que evalua el with
-(define (evalWith expr bdgs)
-  (if (eq? 0 (length bdgs))
-      expr
-      (evalWith (subst expr (binding-id (car bdgs)) (binding-value (car bdgs))) (rest bdgs))))
 
-;; Funcion auxiliar de interp que sustituye los ids en el resto de la lista de identificadores
-(define (interpBdgs bdgs bdgsAux)
-  (if (eq? 1 (length bdgsAux))
-      bdgs
-      (cons (car bdgs) (interpBdgs (interpBdg (car bdgs) (cdr bdgs)) (rest bdgsAux)))))
-
-;; Funcion auxiliar de interpBdgs que sustituye el binding dado en la lista de indentificadores
-(define (interpBdg bdg body)
-  (if(eq? 0 (length body))
-     body
-     (cons (substBdg bdg (car body)) (interpBdg bdg (rest body)))))
-
-;; Funcion auxiliar de interpBdg que hace el subst de un binding a otro binding
-(define (substBdg bdg1 bdg2)
-  (binding (binding-id bdg2) (subst (binding-value bdg2) (binding-id bdg1) (binding-value bdg1))))
+;; Funcion auxliar de interp que realiza el interp de una funcion
+#|(define (interp-func func env)
+  (if (fun? func)
+      (closureV (fun-params fwael-expr) (interp-func (fun-body fwael-expr) env) env)
+  |#    
 
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
@@ -445,3 +427,24 @@ Martinez Calzada Diego -  318275457
   (if (eq? 0 (length ids))
       oper
       (subst-varios (subst oper (first ids) (first valores)) (rest ids) (rest valores))))
+
+
+;; ******************************************************************
+
+;; 5. (1pto Extra). Funcion que calcule el perimetro de una elipse en el lenguaje FWAEL.
+;; * Precondiciones: dos numeros que representan respectivamente el eje semi-mayor y el eje semi-menor de la
+;;   elipse.
+;; * Postcondiciones: el perimetro encerrado por la elipse con ejes semi-mayor y semi-menor dados.
+;; perimelipse: AST-num, AST-num -> FWAEL-Value
+(define (perimelipse semi-mayor semi-menor)
+  (let* (
+         [dosPi (parse (* 2 pi))]
+         [potSemiMayor (expt (num-n semi-mayor) 2)]
+         [potSemiMenor (expt (num-n semi-menor) 2)]
+         [sumPot (+ potSemiMayor potSemiMenor)]
+         [divDos (/ sumPot 2)]
+         [raiz (parse (sqrt divDos))])
+  (interp (app (fun '(x y) (op * (list dosPi raiz))) (list semi-mayor semi-menor)) (mtSub))))
+ 
+
+;;(* (* 2 pi) (sqrt (/ (+ (expt (elipse-a f) 2) (expt (elipse-b f) 2)) 2)))
