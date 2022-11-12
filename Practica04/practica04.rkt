@@ -106,7 +106,6 @@ Martinez Calzada Diego -  318275457
     )
   )
 
-
 ;; Funcion auxiliar de parse que transforma a binding la pareja pasada
 (define (appBinding pareja)
   (binding (first pareja) (parse (second pareja))))
@@ -116,7 +115,6 @@ Martinez Calzada Diego -  318275457
   (if (empty? (rest body))
               (parse (first body))
               (parse body)))
-
 
 
 ;; ******************************************************************
@@ -206,7 +204,6 @@ Martinez Calzada Diego -  318275457
            (list (desugar (first (app-args ap)))))
   )
 )
-
 
 
 ;; ******************************************************************
@@ -318,30 +315,100 @@ Martinez Calzada Diego -  318275457
         [args (app-args fwael-expr)]
         [fun-arg (first (fun-params apped-fun))]
         [env (aSub fun-arg (first args) env)])
-        (interp (subst apped-fun fun-arg env) env)
+        ;;(interp (subst apped-fun fun-arg env) env)
+        (interp (substFunc apped-fun env) env)
       )]
     [else ("Error de sintaxis")]
   )
 )
 
 
+;; Funcion auxiliar de  que verifica si un id esta en el ambiente
+(define (estaEnEnv id env)
+  (if (mtSub? env)
+      #f
+      (if (eq? id (aSub-name env))
+          #t
+          (estaEnEnv id (aSub-bSub env)))))
+
+;; Funcion auxiliar de intep que aplica subst dependiendo de los ids que este en el ambiente
+(define (substFunc func env)
+  (let* (
+         [body (fun-body func)]
+         [variables (varFunc body)]
+         [ids (filterIds variables)])
+    (substFuncAux func ids env)))
+  
+
+;; Funcion auxiliar de interp que permite aplicar subst a cada funcion anidada
+(define (substFuncAux func ids env)
+  (if (empty? ids)
+      func
+      (if (eq? (estaEnEnv (car ids) env) #t)
+          (substFuncAux (substAppFunc func (car ids) env) (cdr ids) env)
+          (substFuncAux func (cdr ids) env)))) 
+       
+;; Funcion auxiliar de interp que aplica el subst a la funcion con un id dado
+(define (substAppFunc func id env)
+  (subst func id env))
+
+
+;; Funcion auxiliar de interp que encuentra las variables del cuerpo de la funcion
+(define (varFunc func-body)
+  (cond
+    [(id? func-body) (id-i func-body)]
+    [(num? func-body) (num-n func-body)]
+    [(lempty? func-body) func-body]
+    [(bool? func-body) (bool-b func-body)]
+    [(op? func-body) (map varFunc (op-args func-body))]
+    [(op-bool? func-body) (list  (varFunc (op-bool-larg func-body)) (varFunc (op-bool-rarg func-body)))]
+    [(lcons? func-body) (list (varFunc (lcons-l func-body)) (varFunc (lcons-r func-body)))]
+    [(lcar? func-body) (varFunc (lcar-lst func-body))]
+    [(lcdr? func-body) (varFunc (lcdr-lst func-body))]
+    [(fun? func-body) (varFunc (fun-body func-body))]
+    [(app? func-body) (varFunc (app-fun func-body))]
+    )
+)
+    
+
+;; Funcion auxiliar de varFunc que filtra los ids
+(define (filterIds ids)
+  (if (empty? ids)
+      '()
+      (cond
+        [(symbol? (car ids)) (cons (car ids) (filterIds (cdr ids)))]
+        [(number? (car ids)) (filterIds (cdr ids))]
+        [(boolean? (car ids)) (filterIds (cdr ids))]
+        [(list? (car ids)) (filterIds (car ids))]
+        [else (filterIds (cdr ids))])))
 
 ;; Funcion auxiliar de interp que convierte a valores de Racket los valores de tipo FWAEL.
 ;; * Precondiciones: lista de valores de tipo FWAEL
 ;; * Postcondiciones: lista de valores de Racket 
 (define (interpOp args env)
   (if (empty? args)
-      '() ;; interp <- Para operaciones de (+ 3 (op + (..))
-      (cons (interp-val (car args) env) (interpOp (cdr args) env))))
+      '()
+      (cons (interp-val (car args)) (interpOp (cdr args) env))))
 
 ;; Funcion auxiliar de interp que convierte un a valor de Racket el valor de tipo FWAEL.
 ;; * Precondiciones: valor de tipo FWAEL
 ;; * Postcondciones: valor transformado a Racket
-(define (interp-val fwae-ast)
+(define (interp-val fwael-ast)
   (cond
-    [(id? fwae-ast) (error "error: Variable libre")]
-    [(num? fwae-ast) (num-n fwae-ast)]
-    [(bool? fwae-ast) (bool-b fwae-ast)]
+    [(id? fwael-ast) (error "error: Variable libre")]
+    [(num? fwael-ast) (num-n fwael-ast)]
+    [(bool? fwael-ast) (bool-b fwael-ast)]
+    [(op? fwael-ast) (cond
+                      [(eq? + (op-f fwael-ast)) (operSum (map interp-val (op-args fwael-ast)))]
+                      [(eq? - (op-f fwael-ast)) (operRes (map interp-val (op-args fwael-ast)))]
+                      [(eq? * (op-f fwael-ast)) (operProd (map interp-val (op-args fwael-ast)))]
+                      [(eq? / (op-f fwael-ast)) (operDiv (map interp-val (op-args fwael-ast)))]
+                      [(eq? modulo (op-f fwael-ast)) (operMod (map interp-val (op-args fwael-ast)))]
+                      [(eq? expt (op-f fwael-ast)) (operExpt (map interp-val (op-args fwael-ast)))]
+                      [(eq? not (op-f fwael-ast)) (operNot (map interp-val (op-args fwael-ast)))])]
+    [(op-bool? fwael-ast) (cond
+                           [(eq? 'or (op-bool-f fwael-ast)) (or (interp-val (op-bool-larg fwael-ast)) (interp-val (op-bool-rarg fwael-ast)))]
+                           [(eq? 'and (op-bool-f fwael-ast)) (and (interp-val (op-bool-larg fwael-ast)) (interp-val (op-bool-rarg fwael-ast)))])]
     ))
 
 ;; Funcion auxuliar de interp que realiza la operacion de suma sobre una lista de numeros.
@@ -406,13 +473,7 @@ Martinez Calzada Diego -  318275457
   (if (eq? (length l) 1)
       (not (first l))
       (error "error: Not requiere un parametro")))
-
-
-;; Funcion auxliar de interp que realiza el interp de una funcion
-#|(define (interp-func func env)
-  (if (fun? func)
-      (closureV (fun-params fwael-expr) (interp-func (fun-body fwael-expr) env) env)
-  |#    
+ 
 
 ;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
 (define (evaluaFunc params oper argus)
@@ -444,7 +505,7 @@ Martinez Calzada Diego -  318275457
          [sumPot (+ potSemiMayor potSemiMenor)]
          [divDos (/ sumPot 2)]
          [raiz (parse (sqrt divDos))])
-  (interp (app (fun '(x y) (op * (list dosPi raiz))) (list semi-mayor semi-menor)) (mtSub))))
+  (interp (desugar (app (fun '(x y) (op * (list dosPi raiz))) (list semi-mayor semi-menor))) (mtSub))))
  
 
 ;;(* (* 2 pi) (sqrt (/ (+ (expt (elipse-a f) 2) (expt (elipse-b f) 2)) 2)))
