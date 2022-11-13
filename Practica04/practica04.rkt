@@ -45,6 +45,7 @@ Martinez Calzada Diego -  318275457
   [listV (l (listof FWAEL-Value?))]
   [closureV (param (listof symbol?)) (body AST?) (env Environment?)])
 
+
 ;; ******************************************************************
 
 ;; 1. (2 pts). Funcion que cual recibe una expresion simbolica (symbolic expression,
@@ -149,16 +150,6 @@ Martinez Calzada Diego -  318275457
      (desugar-app s-fwael-expr)]
   )
 )
-
-;; EJEMPLO DE OP
-;; (op + (list (num 3) (num 3)))
-;; EJEMPLO DE WITH*
-;; (with* (list (binding 'x (num 4)) (binding 'y (num 3))) (op + (list (id 'x) (id 'y))))
-;; EJEMPLO DE FUN
-;; (fun (list 'x 'y) (op + (list (id 'x) (id 'y))))
-;; EJEMPLO DE APP
-;; (app (fun (list 'x 'y) (op + (list (id 'x) (id 'y)))) (list (num 2) (num 3)))
-;; (app (fun '(x) (app (fun '(y) (op + (list (id 'x) (id 'y)))) (list (id 'z)))) (list (num 2)))
 
 ;; Funcion auxiliar que dado una lista de AST realiza desugar de cada elemento 
 (define (desugar-list ls)
@@ -315,72 +306,11 @@ Martinez Calzada Diego -  318275457
         [args (app-args fwael-expr)]
         [fun-arg (first (fun-params apped-fun))]
         [env (aSub fun-arg (first args) env)])
-        ;;(interp (subst apped-fun fun-arg env) env)
         (interp (substFunc apped-fun env) env)
       )]
     [else ("Error de sintaxis")]
   )
 )
-
-
-;; Funcion auxiliar de  que verifica si un id esta en el ambiente
-(define (estaEnEnv id env)
-  (if (mtSub? env)
-      #f
-      (if (eq? id (aSub-name env))
-          #t
-          (estaEnEnv id (aSub-bSub env)))))
-
-;; Funcion auxiliar de intep que aplica subst dependiendo de los ids que este en el ambiente
-(define (substFunc func env)
-  (let* (
-         [body (fun-body func)]
-         [variables (varFunc body)]
-         [ids (filterIds variables)])
-    (substFuncAux func ids env)))
-  
-
-;; Funcion auxiliar de interp que permite aplicar subst a cada funcion anidada
-(define (substFuncAux func ids env)
-  (if (empty? ids)
-      func
-      (if (eq? (estaEnEnv (car ids) env) #t)
-          (substFuncAux (substAppFunc func (car ids) env) (cdr ids) env)
-          (substFuncAux func (cdr ids) env)))) 
-       
-;; Funcion auxiliar de interp que aplica el subst a la funcion con un id dado
-(define (substAppFunc func id env)
-  (subst func id env))
-
-
-;; Funcion auxiliar de interp que encuentra las variables del cuerpo de la funcion
-(define (varFunc func-body)
-  (cond
-    [(id? func-body) (id-i func-body)]
-    [(num? func-body) (num-n func-body)]
-    [(lempty? func-body) func-body]
-    [(bool? func-body) (bool-b func-body)]
-    [(op? func-body) (map varFunc (op-args func-body))]
-    [(op-bool? func-body) (list  (varFunc (op-bool-larg func-body)) (varFunc (op-bool-rarg func-body)))]
-    [(lcons? func-body) (list (varFunc (lcons-l func-body)) (varFunc (lcons-r func-body)))]
-    [(lcar? func-body) (varFunc (lcar-lst func-body))]
-    [(lcdr? func-body) (varFunc (lcdr-lst func-body))]
-    [(fun? func-body) (varFunc (fun-body func-body))]
-    [(app? func-body) (varFunc (app-fun func-body))]
-    )
-)
-    
-
-;; Funcion auxiliar de varFunc que filtra los ids
-(define (filterIds ids)
-  (if (empty? ids)
-      '()
-      (cond
-        [(symbol? (car ids)) (cons (car ids) (filterIds (cdr ids)))]
-        [(number? (car ids)) (filterIds (cdr ids))]
-        [(boolean? (car ids)) (filterIds (cdr ids))]
-        [(list? (car ids)) (filterIds (car ids))]
-        [else (filterIds (cdr ids))])))
 
 ;; Funcion auxiliar de interp que convierte a valores de Racket los valores de tipo FWAEL.
 ;; * Precondiciones: lista de valores de tipo FWAEL
@@ -474,21 +404,61 @@ Martinez Calzada Diego -  318275457
       (not (first l))
       (error "error: Not requiere un parametro")))
  
+;; Funcion auxiliar de  que verifica si un id esta en el ambiente
+(define (estaEnEnv id env)
+  (if (mtSub? env)
+      #f
+      (if (eq? id (aSub-name env))
+          #t
+          (estaEnEnv id (aSub-bSub env)))))
 
-;; Funcion auxiliar de interp que evalua la funcion dados los parametros y los argumentos
-(define (evaluaFunc params oper argus)
+;; Funcion auxiliar de interp para poder aplicar subst dependiendo de los ids que este en el ambiente
+(define (substFunc func env)
+  (let* (
+         [body (fun-body func)]
+         [variables (varFunc body)]
+         [ids (filterIds variables)])
+    (substFuncAux func ids env)))
+  
+;; Funcion auxiliar de interp que permite aplicar subst a cada funcion anidada
+(define (substFuncAux func ids env)
+  (if (empty? ids)
+      func
+      (if (eq? (estaEnEnv (car ids) env) #t)
+          (substFuncAux (substAppFunc func (car ids) env) (cdr ids) env)
+          (substFuncAux func (cdr ids) env)))) 
+       
+;; Funcion auxiliar de interp que aplica el subst a la funcion con un id dado
+(define (substAppFunc func id env)
+  (subst func id env))
+
+;; Funcion auxiliar de interp que encuentra las variables del cuerpo de la funcion
+(define (varFunc func-body)
   (cond
-    [(not (eq? (length params) (length argus))) (error "error: El numero de parametros es inadecuado")]
-    [else (interp (subst-varios oper params argus))]
-   )
+    [(id? func-body) (id-i func-body)]
+    [(num? func-body) (num-n func-body)]
+    [(lempty? func-body) func-body]
+    [(bool? func-body) (bool-b func-body)]
+    [(op? func-body) (map varFunc (op-args func-body))]
+    [(op-bool? func-body) (list  (varFunc (op-bool-larg func-body)) (varFunc (op-bool-rarg func-body)))]
+    [(lcons? func-body) (list (varFunc (lcons-l func-body)) (varFunc (lcons-r func-body)))]
+    [(lcar? func-body) (varFunc (lcar-lst func-body))]
+    [(lcdr? func-body) (varFunc (lcdr-lst func-body))]
+    [(fun? func-body) (varFunc (fun-body func-body))]
+    [(app? func-body) (varFunc (app-fun func-body))]
+    )
 )
-
-;; Funcion auxiliar de evaluaFunc para sustituir los valores de los parametros y evaluar la funcion
-(define (subst-varios oper ids valores)
-  (if (eq? 0 (length ids))
-      oper
-      (subst-varios (subst oper (first ids) (first valores)) (rest ids) (rest valores))))
-
+    
+;; Funcion auxiliar de varFunc que filtra los ids
+(define (filterIds ids)
+  (if (empty? ids)
+      '()
+      (cond
+        [(symbol? (car ids)) (cons (car ids) (filterIds (cdr ids)))]
+        [(number? (car ids)) (filterIds (cdr ids))]
+        [(boolean? (car ids)) (filterIds (cdr ids))]
+        [(list? (car ids)) (filterIds (car ids))]
+        [else (filterIds (cdr ids))])))
 
 ;; ******************************************************************
 
@@ -498,14 +468,7 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: el perimetro encerrado por la elipse con ejes semi-mayor y semi-menor dados.
 ;; perimelipse: AST-num, AST-num -> FWAEL-Value
 (define (perimelipse semi-mayor semi-menor)
-  (let* (
-         [dosPi (parse (* 2 pi))]
-         [potSemiMayor (expt (num-n semi-mayor) 2)]
-         [potSemiMenor (expt (num-n semi-menor) 2)]
-         [sumPot (+ potSemiMayor potSemiMenor)]
-         [divDos (/ sumPot 2)]
-         [raiz (parse (sqrt divDos))])
-  (interp (desugar (app (fun '(x y) (op * (list dosPi raiz))) (list semi-mayor semi-menor))) (mtSub))))
+  (interp (desugar (app (fun '(x y) (op * (list (op * (list (num 2) (num 3.1415))) (op operPerim (list (id 'x) (id 'y)))))) (list semi-mayor semi-menor))) (mtSub)))
  
-
-;;(* (* 2 pi) (sqrt (/ (+ (expt (elipse-a f) 2) (expt (elipse-b f) 2)) 2)))
+(define (operPerim semi-mayor semi-menor)
+  (sqrt (/ (+ (expt semi-mayor 2) (expt semi-menor 2)) 2)))
