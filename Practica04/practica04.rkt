@@ -469,6 +469,8 @@ Martinez Calzada Diego -  318275457
 ;; perimelipse: AST-num, AST-num -> FWAEL-Value
 (define (perimelipse semi-mayor semi-menor)
   (interp (desugar (app (fun '(x y) (op * (list (op * (list (num 2) (num 3.1415))) (op operPerim (list (id 'x) (id 'y)))))) (list semi-mayor semi-menor))) (mtSub)))
- 
+
+
+;; Funcion auxiliar de perimelipse que realiza los calculos para el perimetro de la elipse
 (define (operPerim semi-mayor semi-menor)
   (sqrt (/ (+ (expt semi-mayor 2) (expt semi-menor 2)) 2)))
