@@ -48,18 +48,16 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; (2 pts). Defina la función (parse sexp), la cual recibe una expresión simbolica (symbolic expression,
+;; 1. (2 pts). Defina la función (parse sexp), la cual recibe una expresión simbolica (symbolic expression,
 ;; s-expression); esto es, la expresion puede ser un numero, un simbolo o una lista de expresiones simboli-
 ;; cas. (parse sexp) debe construir un Arbol de Sintaxis Abstracta (Abstract Syntax Tree - AST) a partir de la
 ;; s-expression si es una expresion valida en el lenguaje CFWAEL. En otro caso, debe arrojar un error.
 ;; Utilice los siguientes tipos de datos para representar los AST, el <<ligado>> (bindings) entre simbolos identificadores y
 ;; sus valores CFWAEL, para representar ambientes y cerraduras (closures):
-
 (define (parse sexp)
   (define (parse-op opsexp)
     (let (
           [operador (case (first opsexp)
-
                       [(+) +]
                       [(-) -]
                       [(*) *]
@@ -111,6 +109,7 @@ Martinez Calzada Diego -  318275457
                             (parse (second cond))))
                         (second sexp))
                    (parse (third sexp)))]
+                    ;; Caso (multi-branch (list (branch-cond (op-bool 'and (bool #t) (bool #t)) (bool #t))) (num 10))
      )]
     )
   )
@@ -470,15 +469,9 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 5. (1pto Extra). Funcion que calcule el perimetro de una elipse en el lenguaje FWAEL.
-;; * Precondiciones: dos numeros que representan respectivamente el eje semi-mayor y el eje semi-menor de la
-;;   elipse.
-;; * Postcondiciones: el perimetro encerrado por la elipse con ejes semi-mayor y semi-menor dados.
-;; perimelipse: AST-num, AST-num -> FWAEL-Value
-(define (perimelipse semi-mayor semi-menor)
-  (interp (desugar (app (fun '(x y) (op * (list (op * (list (num 2) (num 3.1415))) (op operPerim (list (id 'x) (id 'y)))))) (list semi-mayor semi-menor))) (mtSub)))
-
-
-;; Funcion auxiliar de perimelipse que realiza los calculos para el perimetro de la elipse
-(define (operPerim semi-mayor semi-menor)
-  (sqrt (/ (+ (expt semi-mayor 2) (expt semi-menor 2)) 2)))
+;; 5. (1.5 pts Extra). Funcion que calcula el n-esimo elemento de la serie de Fibonacci en el lenguaje
+;; CFWAEL.
+;; * Precondiciones: Un numero entero positivo que representa la posicion de un elemento de la serie de
+;; Fibonacci.
+;; * Postcondiciones: El n-esimo elemento de la serie de Fibonacci.
+;; fibonacci: CFWAEL-Value-numV -> CFWAEL-Value-numV
