@@ -155,6 +155,8 @@ Martinez Calzada Diego -  318275457
     [(lcdr? s-fwael-expr) (lcdr (desugar (lcdr-lst s-fwael-expr)))]
     [(app? s-fwael-expr)
      (desugar-app s-fwael-expr)]
+    [(branch?  s-fwael-expr) s-fwael-expr]
+    [(multi-branch? s-fwael-expr) (desugar-mb s-fwael-expr)] 
   )
 )
 
@@ -203,6 +205,17 @@ Martinez Calzada Diego -  318275457
   )
 )
 
+;; Funcion auxiliar que dado un multi-branch realiza su desugar 
+(define (desugar-mb mb)
+  (if (= 1 (length (multi-branch-conds mb)))
+      (branch (branch-cond-test (first (multi-branch-conds mb)))
+              (branch-cond-then (first (multi-branch-conds mb)))
+              (multi-branch-else mb))
+      (branch (branch-cond-test (first (multi-branch-conds mb)))
+              (branch-cond-then (first (multi-branch-conds mb)))
+              (desugar-mb (multi-branch (cdr (multi-branch-conds mb) (multi-branch-else mb)))))
+  )
+)
 
 ;; ******************************************************************
 
