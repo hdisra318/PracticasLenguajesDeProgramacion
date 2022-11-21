@@ -290,40 +290,45 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 4. (3 pts). Funcion que evalua una expresion FWAEL sin azucar sintactica
-;; dada bajo el ambiente (Environment) env dado. El resultado de la evaluacion debe ser un valor FWAEL
-;; (FWAEL-Value) y no un valor de Racket. Para evaluar expresiones fun es necesario utilizar la funcion subst.
-;; * Precondiciones: una expresion FWAEL en su representacion como Arbol de Sintaxis Abstracta (AST), sin azucar
-;;   sintactica y un ambiente de ejecucion.
-;; * Postcondiciones: un valor FWAEL al que se evalua la expresion en el ambiente dado.
-;; interp: AST, Environment -> FWAEL-Value
-(define (interp fwael-expr env)
+;; 4. (2 pts). Funcion que evalúa una expresión CFWAEL sin azúcar sintactica dada bajo
+;; el ambiente (Environment) env dado. El resultado de la evaluación debe ser un valor CFWAEL.
+;; (CFWAEL-Value) y no un valor de Racket.
+;; * Precondiciones: una expresión CFWAEL en su representación cómo Árbol de Sintaxis Abstracta (AST)
+;; y un ambiente de ejecución.
+;; * Postcondiciones: un valor CFWAEL al que se evalúa la expresión CFWAEL en el ambiente
+;; dado conforme a las condiciones descritas.
+;; interp: AST, Environment -> CFWAEL-Value
+(define (interp cfwael-expr env)
   (cond
-    [(id? fwael-expr) (error "error: Variable libre")]
-    [(num? fwael-expr) (numV (num-n fwael-expr))]
-    [(lempty? fwael-expr) (listV empty)]
-    [(bool? fwael-expr) (boolV (bool-b fwael-expr))]
-    [(op? fwael-expr) (cond
-                      [(eq? + (op-f fwael-expr)) (interp (parse (operSum (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? - (op-f fwael-expr)) (interp (parse (operRes (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? * (op-f fwael-expr)) (interp (parse (operProd (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? / (op-f fwael-expr)) (interp (parse (operDiv (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? modulo (op-f fwael-expr)) (interp (parse (operMod (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? expt (op-f fwael-expr)) (interp (parse (operExpt (interpOp (op-args fwael-expr) env))) env)]
-                      [(eq? not (op-f fwael-expr)) (interp (bool (operNot (interpOp (op-args fwael-expr) env))) env)])]
-    [(op-bool? fwael-expr) (cond
-                            [(eq? 'or (op-bool-f fwael-expr)) (interp (bool (or (interp-val (op-bool-larg fwael-expr)) (interp-val (op-bool-rarg fwael-expr)))) env)]
-                            [(eq? 'and (op-bool-f fwael-expr)) (interp (bool (and (interp-val (op-bool-larg fwael-expr)) (interp-val (op-bool-rarg fwael-expr)))) env)])]
-    [(fun? fwael-expr) (closureV (fun-params fwael-expr) (fun-body fwael-expr) env)]
-    [(lcons? fwael-expr) (let (
-                               [l-expr (interp (lcons-l fwael-expr) env)]
-                               [r-expr (interp (lcons-r fwael-expr) env)])
+    [(id? cfwael-expr) (error "error: Variable libre")]
+    [(num? cfwael-expr) (numV (num-n cfwael-expr))]
+    [(lempty? cfwael-expr) (listV empty)]
+    [(bool? cfwael-expr) (boolV (bool-b cfwael-expr))]
+    [(op? cfwael-expr) (cond
+                      [(eq? + (op-f cfwael-expr)) (interp (parse (operSum (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? - (op-f cfwael-expr)) (interp (parse (operRes (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? * (op-f cfwael-expr)) (interp (parse (operProd (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? / (op-f cfwael-expr)) (interp (parse (operDiv (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? modulo (op-f cfwael-expr)) (interp (parse (operMod (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? expt (op-f cfwael-expr)) (interp (parse (operExpt (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? not (op-f cfwael-expr)) (interp (bool (operNot (interpOp (op-args cfwael-expr) env))) env)])]
+    [(op-bool? cfwael-expr) (cond
+                            [(eq? 'or (op-bool-f cfwael-expr)) (interp (bool (or (interp-val (op-bool-larg cfwael-expr)) (interp-val (op-bool-rarg cfwael-expr)))) env)]
+                            [(eq? 'and (op-bool-f cfwael-expr)) (interp (bool (and (interp-val (op-bool-larg cfwael-expr)) (interp-val (op-bool-rarg cfwael-expr)))) env)])]
+    [(branch? cfwael-expr) (if (eq? #t (boolV-b (interp (branch-test cfwael-expr) env)))
+                                (interp (branch-then cfwael-expr) env)
+                                (interp (branch-else cfwael-expr) env))]
+    ;;CASO DE COND MULTI-BRANCH
+    [(fun? cfwael-expr) (closureV (fun-params cfwael-expr) (fun-body cfwael-expr) env)]
+    [(lcons? cfwael-expr) (let (
+                               [l-expr (interp (lcons-l cfwael-expr) env)]
+                               [r-expr (interp (lcons-r cfwael-expr) env)])
                            (listV (list l-expr r-expr)))]
-    [(lcar? fwael-expr) (interp (lcons-l (lcar-lst fwael-expr)) env)]
-    [(lcdr? fwael-expr) (interp (lcons-r (lcdr-lst fwael-expr)) env)]
-    [(app? fwael-expr) (let* (
-        [apped-fun (app-fun fwael-expr)]
-        [args (app-args fwael-expr)]
+    [(lcar? cfwael-expr) (interp (lcons-l (lcar-lst cfwael-expr)) env)]
+    [(lcdr? cfwael-expr) (interp (lcons-r (lcdr-lst cfwael-expr)) env)]
+    [(app? cfwael-expr) (let* (
+        [apped-fun (app-fun cfwael-expr)]
+        [args (app-args cfwael-expr)]
         [fun-arg (first (fun-params apped-fun))]
         [env (aSub fun-arg (first args) env)])
         (interp (substFunc apped-fun env) env)
@@ -333,7 +338,7 @@ Martinez Calzada Diego -  318275457
 )
 
 ;; Funcion auxiliar de interp que convierte a valores de Racket los valores de tipo FWAEL.
-;; * Precondiciones: lista de valores de tipo FWAEL
+;; * Precondiciones: lista de valores de tipo CFWAEL
 ;; * Postcondiciones: lista de valores de Racket 
 (define (interpOp args env)
   (if (empty? args)
@@ -341,24 +346,24 @@ Martinez Calzada Diego -  318275457
       (cons (interp-val (car args)) (interpOp (cdr args) env))))
 
 ;; Funcion auxiliar de interp que convierte un a valor de Racket el valor de tipo FWAEL.
-;; * Precondiciones: valor de tipo FWAEL
+;; * Precondiciones: valor de tipo CFWAEL
 ;; * Postcondciones: valor transformado a Racket
-(define (interp-val fwael-ast)
+(define (interp-val cfwael-ast)
   (cond
-    [(id? fwael-ast) (error "error: Variable libre")]
-    [(num? fwael-ast) (num-n fwael-ast)]
-    [(bool? fwael-ast) (bool-b fwael-ast)]
-    [(op? fwael-ast) (cond
-                      [(eq? + (op-f fwael-ast)) (operSum (map interp-val (op-args fwael-ast)))]
-                      [(eq? - (op-f fwael-ast)) (operRes (map interp-val (op-args fwael-ast)))]
-                      [(eq? * (op-f fwael-ast)) (operProd (map interp-val (op-args fwael-ast)))]
-                      [(eq? / (op-f fwael-ast)) (operDiv (map interp-val (op-args fwael-ast)))]
-                      [(eq? modulo (op-f fwael-ast)) (operMod (map interp-val (op-args fwael-ast)))]
-                      [(eq? expt (op-f fwael-ast)) (operExpt (map interp-val (op-args fwael-ast)))]
-                      [(eq? not (op-f fwael-ast)) (operNot (map interp-val (op-args fwael-ast)))])]
-    [(op-bool? fwael-ast) (cond
-                           [(eq? 'or (op-bool-f fwael-ast)) (or (interp-val (op-bool-larg fwael-ast)) (interp-val (op-bool-rarg fwael-ast)))]
-                           [(eq? 'and (op-bool-f fwael-ast)) (and (interp-val (op-bool-larg fwael-ast)) (interp-val (op-bool-rarg fwael-ast)))])]
+    [(id? cfwael-ast) (error "error: Variable libre")]
+    [(num? cfwael-ast) (num-n cfwael-ast)]
+    [(bool? cfwael-ast) (bool-b cfwael-ast)]
+    [(op? cfwael-ast) (cond
+                      [(eq? + (op-f cfwael-ast)) (operSum (map interp-val (op-args cfwael-ast)))]
+                      [(eq? - (op-f cfwael-ast)) (operRes (map interp-val (op-args cfwael-ast)))]
+                      [(eq? * (op-f cfwael-ast)) (operProd (map interp-val (op-args cfwael-ast)))]
+                      [(eq? / (op-f cfwael-ast)) (operDiv (map interp-val (op-args cfwael-ast)))]
+                      [(eq? modulo (op-f cfwael-ast)) (operMod (map interp-val (op-args cfwael-ast)))]
+                      [(eq? expt (op-f cfwael-ast)) (operExpt (map interp-val (op-args cfwael-ast)))]
+                      [(eq? not (op-f cfwael-ast)) (operNot (map interp-val (op-args cfwael-ast)))])]
+    [(op-bool? cfwael-ast) (cond
+                           [(eq? 'or (op-bool-f cfwael-ast)) (or (interp-val (op-bool-larg cfwael-ast)) (interp-val (op-bool-rarg cfwael-ast)))]
+                           [(eq? 'and (op-bool-f cfwael-ast)) (and (interp-val (op-bool-larg cfwael-ast)) (interp-val (op-bool-rarg cfwael-ast)))])]
     ))
 
 ;; Funcion auxuliar de interp que realiza la operacion de suma sobre una lista de numeros.
@@ -488,3 +493,4 @@ Martinez Calzada Diego -  318275457
 ;; Fibonacci.
 ;; * Postcondiciones: El n-esimo elemento de la serie de Fibonacci.
 ;; fibonacci: CFWAEL-Value-numV -> CFWAEL-Value-numV
+;;Como calcular el condicional del if (= 0 x) then else
