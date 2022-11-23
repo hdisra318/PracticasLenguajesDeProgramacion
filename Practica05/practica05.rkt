@@ -64,6 +64,11 @@ Martinez Calzada Diego -  318275457
                       [(-) -]
                       [(*) *]
                       [(/) /]
+                      [(=) =]
+                      [(<) <]
+                      [(>) >]
+                      [(<=) <=]
+                      [(>=) >=]
                       [(modulo) modulo]
                       [(expt) expt]
                       [(not) not])])
@@ -88,7 +93,7 @@ Martinez Calzada Diego -  318275457
           )]
     [(number? sexp) (num sexp)]
     [(list? sexp) (case (first sexp)
-          [(+ - * / modulo expt not) (parse-op sexp)]
+          [(+ - * / = < > >= <= modulo expt not) (parse-op sexp)]
           [(or and) (parse-op-bool sexp)]
           [(with) (with (map appBinding (second sexp)) (parse (third sexp)))]
           [(with*) (with* (map appBinding (second sexp)) (parse (third sexp)))]
@@ -111,7 +116,6 @@ Martinez Calzada Diego -  318275457
                             (parse (second cond))))
                         (second sexp))
                    (parse (third sexp)))]
-                    ;; Caso (multi-branch (list (branch-cond (op-bool 'and (bool #t) (bool #t)) (bool #t))) (num 10))
      )]
     )
   )
@@ -142,7 +146,6 @@ Martinez Calzada Diego -  318275457
     [(bool? s-fwael-expr) s-fwael-expr]
     [(op? s-fwael-expr)
      (op (op-f s-fwael-expr) (desugar-list (op-args s-fwael-expr)))]
-                          ;;[(eq? + (op-f s-fwael-expr)) (op + (desugar-list (op-args s-fwael-expr)))]
     [(op-bool? s-fwael-expr)
      (op-bool (op-bool-f s-fwael-expr) (desugar (op-bool-larg s-fwael-expr)) (desugar (op-bool-rarg s-fwael-expr)))]
     [(with? s-fwael-expr)
@@ -308,11 +311,14 @@ Martinez Calzada Diego -  318275457
     [(bool? cfwael-expr) (boolV (bool-b cfwael-expr))]
     [(op? cfwael-expr) (cond
                       [(eq? + (op-f cfwael-expr)) (interp (parse (operSum (interpOp (op-args cfwael-expr) env))) env)]
-                      ;; Para fibonacci
-                      ;;[(eq? = (op-f (cfwael-expr)) (interp (parse (eq? (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr)))))
                       [(eq? - (op-f cfwael-expr)) (interp (parse (operRes (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? * (op-f cfwael-expr)) (interp (parse (operProd (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? / (op-f cfwael-expr)) (interp (parse (operDiv (interpOp (op-args cfwael-expr) env))) env)]
+                      [(eq? = (op-f cfwael-expr)) (interp (bool (= (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr))))) env)]
+                      [(eq? < (op-f cfwael-expr)) (interp (bool (< (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr))))) env)]
+                      [(eq? > (op-f cfwael-expr)) (interp (bool (> (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr))))) env)]
+                      [(eq? <= (op-f cfwael-expr)) (interp (bool (<= (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr))))) env)]
+                      [(eq? >= (op-f cfwael-expr)) (interp (bool (>= (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr))))) env)]
                       [(eq? modulo (op-f cfwael-expr)) (interp (parse (operMod (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? expt (op-f cfwael-expr)) (interp (parse (operExpt (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? not (op-f cfwael-expr)) (interp (bool (operNot (interpOp (op-args cfwael-expr) env))) env)])]
@@ -488,6 +494,7 @@ Martinez Calzada Diego -  318275457
         [(list? (car ids)) (filterIds (car ids))]
         [else (filterIds (cdr ids))])))
 
+
 ;; ******************************************************************
 
 ;; 5. (1.5 pts Extra). Funcion que calcula el n-esimo elemento de la serie de Fibonacci en el lenguaje
@@ -496,4 +503,8 @@ Martinez Calzada Diego -  318275457
 ;; Fibonacci.
 ;; * Postcondiciones: El n-esimo elemento de la serie de Fibonacci.
 ;; fibonacci: CFWAEL-Value-numV -> CFWAEL-Value-numV
-;;Como calcular el condicional del if (= 0 x) then else
+(define (fibonacci n)
+  ;;(interp (app (fun '(x) (multi-branch (list (branch-cond (op = (list (id 'x) (num 0))) (num 0))
+    ;;                                        (branch-cond (op = (list (id 'x) (num 1))) (num 1)))
+      ;;                                (op + (list (id 'x) (id 'x))))) (list (id n))) (mtSub)))
+(interp (parse '(app (fun (x) (cond (((= x 0) 0) ((= x 1) 1)) (+ (fibonacci (- n 1)) (fibonacci (- n 2))))) n))))
