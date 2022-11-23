@@ -48,12 +48,14 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 1. (2 pts). Defina la función (parse sexp), la cual recibe una expresión simbolica (symbolic expression,
+;; 1. (2 pts). Defina la funcion (parse sexp), la cual recibe una expresion simbolica (symbolic expression,
 ;; s-expression); esto es, la expresion puede ser un numero, un simbolo o una lista de expresiones simboli-
 ;; cas. (parse sexp) debe construir un Arbol de Sintaxis Abstracta (Abstract Syntax Tree - AST) a partir de la
 ;; s-expression si es una expresion valida en el lenguaje CFWAEL. En otro caso, debe arrojar un error.
-;; Utilice los siguientes tipos de datos para representar los AST, el <<ligado>> (bindings) entre simbolos identificadores y
-;; sus valores CFWAEL, para representar ambientes y cerraduras (closures):
+;; * Precondiciones: una expresion simbolica (symbolic expression; s-expression).
+;; * Postcondiciones: si la s-expression de entrada satisface la gramática del lenguaje CFWAEL;
+;; devuelve un árbol de sintaxis abstracta AST, de lo contrario, enviar un error.
+;; parse: s-expression -> AST
 (define (parse sexp)
   (define (parse-op opsexp)
     (let (
@@ -127,12 +129,12 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 2. (3 pts). Funcion (desugar s-fwael-expr) que elimina el azucar sintactica de la expresion FWAEL
-;; dada; la cual se encuentra en forma de Arbol de Sintaxis Abstracta, y devuelve un nuevo arbol FWAEL
-;; sin azucar sintactica.
-;; * Precondiciones: Una expresion FWAEL en su representacion como AST.
-;; * Postcondiciones: Una expresión FWAEL sin azucar sintáctica representada en un AST.
-;;   desugar: AST -> AST
+;; 2. (3 pts). Funcion que elimina el azucar sintactica de la expresion CFWAEL
+;; dada; la cual se encuentra en forma de Arbol de Sintaxis Abstracta, y devuelve
+;; un nuevo arbol CFWAEL sin azucar sintactica.
+;; * Precondiciones: Una expresion CFWAEL en su representacion como AST.
+;; * Postcondiciones: Una expresión CFWAEL sin azucar sintactica representada en un AST.
+;; desugar: AST -> AST
 (define (desugar s-fwael-expr)
   (cond
     [(id? s-fwael-expr) s-fwael-expr]
@@ -213,23 +215,23 @@ Martinez Calzada Diego -  318275457
               (multi-branch-else mb))
       (branch (branch-cond-test (first (multi-branch-conds mb)))
               (branch-cond-then (first (multi-branch-conds mb)))
-              (desugar-mb (multi-branch (cdr (multi-branch-conds mb) (multi-branch-else mb)))))
-  )
+              (desugar-mb (multi-branch (cdr (multi-branch-conds mb)) (multi-branch-else mb)))))
 )
+
 
 ;; ******************************************************************
 
-;; 3. (1 pts). Funcion que realiza la sustitucion del parametro formal sub-id de la funcion de
-;; la que la expresion FWAEL sin azúcar sintactica que forma parte de su cuerpo, por el
-;; parametro real que debería encontrarse en el ambiente (Environment) env. En caso de no
-;; encontrar el simbolo sub-id que representa el parametro formal en el ambiente env,
-;; envia un error.
-;; * Precondiciones: Una expresion FWAEL sin azucar sintactica representada en un AST y
-;;   un ambiente.
-;; * Postcondiciones: Una expresion FWAEL sin azucar sintactica representada como AST
+;; 3. (2 pts). Funcion que realiza la sustitucion del parametro formal sub-id de la funcion
+;; de la que la expresión CFWAEL sin azucar sintactica que forma parte de su cuerpo, por el
+;; parametro real que deberia encontrarse en el ambiente (Environment) env.
+;; En caso de no encontrar el simbolo sub-id que representa el parametro formal en el
+;; ambiente env, debe enviar un error.
+;; * Precondiciones: Una expresion CFWAEL sin azucar sintactica representada en
+;;   un AST y un ambiente.
+;; * Postcondiciones: Una expresion CFWAEL sin azucar sintactica representada como AST
 ;;   donde se ha sustituido el parametro formal de la expresion del cuerpo de la funcion
-;;   dada por el parámetro real que deberia estar en el ambiente. En caso de que el
-;;   parametro formal no se encuentre en el ambiente, envia un error.
+;    dada por el parametro real que deberia estar en el ambiente.
+;    En caso de que el parametro formal no se encuentre en el ambiente, debe enviar un error.
 ;; subst: AST, Environment -> AST
 (define (subst fwael-expr sub-id env)
     (define (find-inenv env)
@@ -290,12 +292,12 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 4. (2 pts). Funcion que evalúa una expresión CFWAEL sin azúcar sintactica dada bajo
-;; el ambiente (Environment) env dado. El resultado de la evaluación debe ser un valor CFWAEL.
+;; 4. (2 pts). Funcion que evalúa una expresion CFWAEL sin azucar sintactica dada bajo
+;; el ambiente (Environment) env dado. El resultado de la evaluacion debe ser un valor CFWAEL.
 ;; (CFWAEL-Value) y no un valor de Racket.
-;; * Precondiciones: una expresión CFWAEL en su representación cómo Árbol de Sintaxis Abstracta (AST)
-;; y un ambiente de ejecución.
-;; * Postcondiciones: un valor CFWAEL al que se evalúa la expresión CFWAEL en el ambiente
+;; * Precondiciones: una expresión CFWAEL en su representacion como Arbol de Sintaxis Abstracta (AST)
+;; y un ambiente de ejecucion.
+;; * Postcondiciones: un valor CFWAEL al que se evalua la expresión CFWAEL en el ambiente
 ;; dado conforme a las condiciones descritas.
 ;; interp: AST, Environment -> CFWAEL-Value
 (define (interp cfwael-expr env)
@@ -306,6 +308,8 @@ Martinez Calzada Diego -  318275457
     [(bool? cfwael-expr) (boolV (bool-b cfwael-expr))]
     [(op? cfwael-expr) (cond
                       [(eq? + (op-f cfwael-expr)) (interp (parse (operSum (interpOp (op-args cfwael-expr) env))) env)]
+                      ;; Para fibonacci
+                      ;;[(eq? = (op-f (cfwael-expr)) (interp (parse (eq? (num-n (first (op-args cfwael-expr))) (num-n (second (op-args cfwael-expr)))))
                       [(eq? - (op-f cfwael-expr)) (interp (parse (operRes (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? * (op-f cfwael-expr)) (interp (parse (operProd (interpOp (op-args cfwael-expr) env))) env)]
                       [(eq? / (op-f cfwael-expr)) (interp (parse (operDiv (interpOp (op-args cfwael-expr) env))) env)]
@@ -318,7 +322,6 @@ Martinez Calzada Diego -  318275457
     [(branch? cfwael-expr) (if (eq? #t (boolV-b (interp (branch-test cfwael-expr) env)))
                                 (interp (branch-then cfwael-expr) env)
                                 (interp (branch-else cfwael-expr) env))]
-    ;;CASO DE COND MULTI-BRANCH
     [(fun? cfwael-expr) (closureV (fun-params cfwael-expr) (fun-body cfwael-expr) env)]
     [(lcons? cfwael-expr) (let (
                                [l-expr (interp (lcons-l cfwael-expr) env)]
