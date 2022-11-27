@@ -504,7 +504,6 @@ Martinez Calzada Diego -  318275457
 ;; * Postcondiciones: El n-esimo elemento de la serie de Fibonacci.
 ;; fibonacci: CFWAEL-Value-numV -> CFWAEL-Value-numV
 (define (fibonacci n)
-  ;;(interp (app (fun '(x) (multi-branch (list (branch-cond (op = (list (id 'x) (num 0))) (num 0))
-    ;;                                        (branch-cond (op = (list (id 'x) (num 1))) (num 1)))
-      ;;                                (op + (list (id 'x) (id 'x))))) (list (id n))) (mtSub)))
-(interp (parse '(app (fun (x) (cond (((= x 0) 0) ((= x 1) 1)) (+ (fibonacci (- n 1)) (fibonacci (- n 2))))) n))))
+  (interp (app (fun '(x) (multi-branch (list (branch-cond (op = (list (id 'x) (num 0))) (num 0))
+                                            (branch-cond (op = (list (id 'x) (num 1))) (num 1)))
+                                      (op + (list (id 'x) (id 'x))))) (list (id n))) (mtSub)))
