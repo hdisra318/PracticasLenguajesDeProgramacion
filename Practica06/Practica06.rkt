@@ -305,6 +305,33 @@ Martinez Calzada Diego -  318275457
 ;; check-type: AST -> TCFWAEL-Value
 
 
+(define (check-type tcfwael-expr)
+  (cond
+    [(num? tcfwael-expr) numV]
+    [(bool? tcfwael-expr) boolV]
+    [(op? tcfwael-expr)
+     (cond
+       [(eq? + (op-f tcfwael-expr)) numV]
+       [(eq? - (op-f tcfwael-expr)) numV]
+       [(eq? * (op-f tcfwael-expr)) numV]
+       [(eq? / (op-f tcfwael-expr)) numV]
+       [(eq? = (op-f tcfwael-expr)) boolV]
+       [(eq? < (op-f tcfwael-expr)) boolV]
+       [(eq? > (op-f tcfwael-expr)) boolV]
+       [(eq? <= (op-f tcfwael-expr)) boolV]
+       [(eq? >= (op-f tcfwael-expr)) boolV]
+       [(eq? modulo (op-f tcfwael-expr)) numV]
+       [(eq? expt (op-f tcfwael-expr)) numV]
+       [(eq? not (op-f tcfwael-expr)) boolV]
+     )]
+    [(op-bool? tcfwael-expr)
+     (cond
+       [(eq? 'and (op-bool-f tcfwael-expr)) boolV]
+       [(eq? 'or (op-bool-f tcfwael-expr)) boolV]
+     )
+    ]
+  )
+)
 
 
 
