@@ -39,10 +39,10 @@ Martinez Calzada Diego -  318275457
   [aSub (name symbol?) (value AST?) (bSub Environment?)])
 
 ;; Tipo de dato para los valores FWAEL
-(define-type TFWAEL-Value
+(define-type TCFWAEL-Value
   [numV (n number?)]
   [boolV (b boolean?)]
-  [listV (l (listof TFWAEL-Value?))]
+  [listV (l (listof TCFWAEL-Value?))]
   [closureV (param (listof symbol?)) (body AST?) (env Environment?)])
 
 
@@ -295,16 +295,14 @@ Martinez Calzada Diego -  318275457
 
 ;; ******************************************************************
 
-;; 4. (3 pts). Funcion (check-type tcfwael-expr) que indica el tipo de una expresión TCFWAEL sin azúcar
-;; sintáctica ni identificadores (variables). Note que los tipos a los que se reduce una expresión son fijos por cada
-;; tipo de operación TCFWAEL; sin importar el valor de sus parámetros o argumentos (en el siguiente ejercicio, con
+;; 4. (3 pts). Funcion (check-type tcfwael-expr) que indica el tipo de una expresion TCFWAEL sin azucar
+;; sintáctica ni identificadores (variables). Note que los tipos a los que se reduce una expresion son fijos por cada
+;; tipo de operacion TCFWAEL; sin importar el valor de sus parametros o argumentos (en el siguiente ejercicio, con
 ;; interp, deberá cuidar los tipos de estos parámetros o argumentos).
-;; * Precondiciones: una expresión TCFWAEL en su representación cómo Árbol de Sintaxis Abstracta (AST).
-;; * Postcondiciones: el tipo TCFWAEL-Value al que evaluará la expresión TCFWAEL conforme a las condiciones
+;; * Precondiciones: una expresion TCFWAEL en su representacion cómo Arbol de Sintaxis Abstracta (AST).
+;; * Postcondiciones: el tipo TCFWAEL-Value al que evaluara la expresión TCFWAEL conforme a las condiciones
 ;; descritas en este ejercicio.
 ;; check-type: AST -> TCFWAEL-Value
-
-
 (define (check-type tcfwael-expr)
   (cond
     [(num? tcfwael-expr) numV]
@@ -330,6 +328,13 @@ Martinez Calzada Diego -  318275457
        [(eq? 'or (op-bool-f tcfwael-expr)) boolV]
      )
     ]
+    ;;[(branch? tcfwael-expr) TCFWAEL-Value]
+    [(fun? tcfwael-expr) (check-type (fun-body tcfwael-expr))]
+    [(lcons? tcfwael-expr) listV]
+    [(lempty? tcfwael-expr) listV]
+    ;;[(lcar? tcfwael-expr) TCFWAEL-Value]
+    [(lcdr? tcfwael-expr) listV]
+    [(app? tcfwael-expr) (check-type (fun-body (app-fun tcfwael-expr)))]
   )
 )
 
@@ -352,7 +357,8 @@ Martinez Calzada Diego -  318275457
     [(lempty? tcfwael-expr) (listV empty)]
     [(bool? tcfwael-expr) (boolV (bool-b tcfwael-expr))]
     [(op? tcfwael-expr) (cond
-                      [(eq? + (op-f tcfwael-expr)) (interp (parse (operSum (interpOp (op-args tcfwael-expr) env))) env)]
+                      [(eq? + (op-f tcfwael-expr)) (if (eq? numV (check-type tcfwael-expr)) (interp (parse (operSum (interpOp (op-args tcfwael-expr) env))) env)
+                                                       (error "error: Argumentos no validos"))]
                       [(eq? - (op-f tcfwael-expr)) (interp (parse (operRes (interpOp (op-args tcfwael-expr) env))) env)]
                       [(eq? * (op-f tcfwael-expr)) (interp (parse (operProd (interpOp (op-args tcfwael-expr) env))) env)]
                       [(eq? / (op-f tcfwael-expr)) (interp (parse (operDiv (interpOp (op-args tcfwael-expr) env))) env)]
@@ -537,15 +543,10 @@ Martinez Calzada Diego -  318275457
         [else (filterIds (cdr ids))])))
 
 
+;; Funcion auxiliar de interp que verifica si los argumentos de la expresion son de tipo numV
+(define (argsNumV expr)
+  (and (eq? numV (check-type (car (op-args expr)))) (cdr (op-args expr))))
+
 ;; ******************************************************************
 
-;; 5. (1.5 pts Extra). Funcion que calcula el n-esimo elemento de la serie de Fibonacci en el lenguaje
-;; CFWAEL.
-;; * Precondiciones: Un numero entero positivo que representa la posicion de un elemento de la serie de
-;; Fibonacci.
-;; * Postcondiciones: El n-esimo elemento de la serie de Fibonacci.
-;; fibonacci: CFWAEL-Value-numV -> CFWAEL-Value-numV
-(define (fibonacci n)
-  (interp (app (fun '(x) (multi-branch (list (branch-cond (op = (list (id 'x) (num 0))) (num 0))
-                                            (branch-cond (op = (list (id 'x) (num 1))) (num 1)))
-                                      (op + (list (id 'x) (id 'x))))) (list (id n))) (mtSub)))
+
