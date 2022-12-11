@@ -339,7 +339,6 @@ Martinez Calzada Diego -  318275457
 )
 
 
-
 ;; ******************************************************************
 
 ;; 5. (3 pts). Funcion que evalúa una expresion TCFWAEL sin azucar sintactica dada bajo
@@ -357,38 +356,59 @@ Martinez Calzada Diego -  318275457
     [(lempty? tcfwael-expr) (listV empty)]
     [(bool? tcfwael-expr) (boolV (bool-b tcfwael-expr))]
     [(op? tcfwael-expr) (cond
-                      [(eq? + (op-f tcfwael-expr)) (if (eq? numV (check-type tcfwael-expr)) (interp (parse (operSum (interpOp (op-args tcfwael-expr) env))) env)
-                                                       (error "error: Argumentos no validos"))]
-                      [(eq? - (op-f tcfwael-expr)) (interp (parse (operRes (interpOp (op-args tcfwael-expr) env))) env)]
-                      [(eq? * (op-f tcfwael-expr)) (interp (parse (operProd (interpOp (op-args tcfwael-expr) env))) env)]
-                      [(eq? / (op-f tcfwael-expr)) (interp (parse (operDiv (interpOp (op-args tcfwael-expr) env))) env)]
-                      [(eq? = (op-f tcfwael-expr)) (interp (bool (= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)]
-                      [(eq? < (op-f tcfwael-expr)) (interp (bool (< (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)]
-                      [(eq? > (op-f tcfwael-expr)) (interp (bool (> (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)]
-                      [(eq? <= (op-f tcfwael-expr)) (interp (bool (<= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)]
-                      [(eq? >= (op-f tcfwael-expr)) (interp (bool (>= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)]
-                      [(eq? modulo (op-f tcfwael-expr)) (interp (parse (operMod (interpOp (op-args tcfwael-expr) env))) env)]
-                      [(eq? expt (op-f tcfwael-expr)) (interp (parse (operExpt (interpOp (op-args tcfwael-expr) env))) env)]
-                      [(eq? not (op-f tcfwael-expr)) (interp (bool (operNot (interpOp (op-args tcfwael-expr) env))) env)])]
+                      [(eq? + (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operSum (interpOp (op-args tcfwael-expr) env))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? - (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operRes (interpOp (op-args tcfwael-expr) env))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? * (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operProd (interpOp (op-args tcfwael-expr) env))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? / (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operDiv (interpOp (op-args tcfwael-expr) env))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? = (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (bool (= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? < (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (bool (< (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? > (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (bool (> (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)
+                                                       (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? <= (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (bool (<= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)
+                                                        (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? >= (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (bool (>= (num-n (first (op-args tcfwael-expr))) (num-n (second (op-args tcfwael-expr))))) env)
+                                                        (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? modulo (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operMod (interpOp (op-args tcfwael-expr) env))) env)
+                                                            (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? expt (op-f tcfwael-expr)) (if (eq? #t (argsNumV (op-args tcfwael-expr))) (interp (parse (operExpt (interpOp (op-args tcfwael-expr) env))) env)
+                                                          (error "error: Hay algun argumento que no es de tipo numV"))]
+                      [(eq? not (op-f tcfwael-expr)) (if (eq? #t (argsBoolV (op-args tcfwael-expr))) (interp (bool (operNot (interpOp (op-args tcfwael-expr) env))) env)
+                                                         (error "error: Hay algun argumento que no es de tipo boolV"))])]
     [(op-bool? tcfwael-expr) (cond
-                            [(eq? 'or (op-bool-f tcfwael-expr)) (interp (bool (or (interp-val (op-bool-larg tcfwael-expr)) (interp-val (op-bool-rarg tcfwael-expr)))) env)]
-                            [(eq? 'and (op-bool-f tcfwael-expr)) (interp (bool (and (interp-val (op-bool-larg tcfwael-expr)) (interp-val (op-bool-rarg tcfwael-expr)))) env)])]
-    [(branch? tcfwael-expr) (if (eq? #t (boolV-b (interp (branch-test tcfwael-expr) env)))
+                            [(eq? 'or (op-bool-f tcfwael-expr)) (if (eq? #t (argsBoolV (list (op-bool-larg tcfwael-expr) (op-bool-rarg tcfwael-expr))))
+                                                                    (interp (bool (or (interp-val (op-bool-larg tcfwael-expr)) (interp-val (op-bool-rarg tcfwael-expr)))) env)
+                                                                    (error "error: Hay algun argumento que no es de tipo boolV"))]
+                            [(eq? 'and (op-bool-f tcfwael-expr)) (if (eq? #t (argsBoolV (list (op-bool-larg tcfwael-expr) (op-bool-rarg tcfwael-expr))))
+                                                                     (interp (bool (and (interp-val (op-bool-larg tcfwael-expr)) (interp-val (op-bool-rarg tcfwael-expr)))) env)
+                                                                     (error "error: Hay algun argumento que no es de tipo boolV"))])]
+    [(branch? tcfwael-expr) (if (eq? #t (eq? boolV (check-type (branch-test tcfwael-expr))))
+                                (if (eq? #t (boolV-b (interp (branch-test tcfwael-expr) env)))
                                 (interp (branch-then tcfwael-expr) env)
-                                (interp (branch-else tcfwael-expr) env))]
+                                (interp (branch-else tcfwael-expr) env))
+                                (error "error: El test no es de tipo boolV"))]
     [(fun? tcfwael-expr) (closureV (fun-params tcfwael-expr) (fun-body tcfwael-expr) env)]
     [(lcons? tcfwael-expr) (let (
                                [l-expr (interp (lcons-l tcfwael-expr) env)]
                                [r-expr (interp (lcons-r tcfwael-expr) env)])
                            (listV (list l-expr r-expr)))]
-    [(lcar? tcfwael-expr) (interp (lcons-l (lcar-lst tcfwael-expr)) env)]
-    [(lcdr? tcfwael-expr) (interp (lcons-r (lcdr-lst tcfwael-expr)) env)]
+    [(lcar? tcfwael-expr) (if (eq? #t (eq? listV (check-type (lcar-lst tcfwael-expr)))) (interp (lcons-l (lcar-lst tcfwael-expr)) env)
+                              (error "error: La expresion no es de tipo listV"))]
+    [(lcdr? tcfwael-expr) (if (eq? #t (eq? listV (check-type (lcdr-lst tcfwael-expr)))) (interp (lcons-r (lcdr-lst tcfwael-expr)) env)
+                              (error "error: La expresion no es de tipo listV"))]
     [(app? tcfwael-expr) (let* (
         [apped-fun (app-fun tcfwael-expr)]
         [args (app-args tcfwael-expr)]
         [fun-arg (first (fun-params apped-fun))]
-        [env (aSub fun-arg (first args) env)])
-        (interp (substFunc apped-fun env) env)
+        [env (aSub fun-arg (first args) env)]
+        [body (fun-body (app-fun tcfwael-expr))]
+        [argumentos (app-args tcfwael-expr)])
+                           (interp (substFunc apped-fun env) env)
       )]
     [else ("Error de sintaxis")]
   )
@@ -545,8 +565,13 @@ Martinez Calzada Diego -  318275457
 
 ;; Funcion auxiliar de interp que verifica si los argumentos de la expresion son de tipo numV
 (define (argsNumV expr)
-  (and (eq? numV (check-type (car (op-args expr)))) (cdr (op-args expr))))
+  (if (eq? '() expr) #t
+  (and (eq? numV (check-type (car expr))) (argsNumV (cdr expr)))))
+
+;; Funcion auxiliar de interp que verifica si los argumentos de la expresion son de tipo boolV
+(define (argsBoolV expr)
+  (if (eq? '() expr) #t
+  (and (eq? boolV (check-type (car expr))) (argsBoolV (cdr expr)))))
+
 
 ;; ******************************************************************
-
-
