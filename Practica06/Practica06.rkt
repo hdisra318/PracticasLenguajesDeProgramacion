@@ -328,16 +328,22 @@ Martinez Calzada Diego -  318275457
        [(eq? 'or (op-bool-f tcfwael-expr)) boolV]
      )
     ]
-    ;;[(branch? tcfwael-expr) TCFWAEL-Value]
+    [(branch? tcfwael-expr) (check-type-if tcfwael-expr)]
     [(fun? tcfwael-expr) (check-type (fun-body tcfwael-expr))]
     [(lcons? tcfwael-expr) listV]
     [(lempty? tcfwael-expr) listV]
-    ;;[(lcar? tcfwael-expr) TCFWAEL-Value]
+    [(lcar? tcfwael-expr) (check-type (lcar-lst tcfwael-expr))]
     [(lcdr? tcfwael-expr) listV]
     [(app? tcfwael-expr) (check-type (fun-body (app-fun tcfwael-expr)))]
   )
 )
 
+(define (check-type-if c)
+  (if (and #t (boolV-b (interp (branch-test c) [mtSub])))
+      (check-type (branch-then c))
+      (check-type (branch-else c))
+  )
+)
 
 ;; ******************************************************************
 
