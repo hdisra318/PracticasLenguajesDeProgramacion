@@ -338,6 +338,7 @@ Martinez Calzada Diego -  318275457
   )
 )
 
+;; Funcion auxiliar de check-type que realiza la verificacion de tipo para el caso del condicional
 (define (check-type-if c)
   (if (and #t (boolV-b (interp (branch-test c) [mtSub])))
       (check-type (branch-then c))
