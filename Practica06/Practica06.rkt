@@ -38,7 +38,7 @@ Martinez Calzada Diego -  318275457
   [mtSub]
   [aSub (name symbol?) (value AST?) (bSub Environment?)])
 
-;; Tipo de dato para los valores FWAEL
+;; Tipo de dato para los valores TCFWAEL
 (define-type TCFWAEL-Value
   [numV (n number?)]
   [boolV (b boolean?)]
@@ -54,7 +54,7 @@ Martinez Calzada Diego -  318275457
 ;; s-expression si es una expresion valida en el lenguaje TCFWAEL. En otro caso, debe arrojar un error.
 ;; * Precondiciones: una expresion simbolica (symbolic expression; s-expression).
 ;; * Postcondiciones: si la s-expression de entrada satisface la gramática del lenguaje TCFWAEL;
-;; devuelve un árbol de sintaxis abstracta AST, de lo contrario, enviar un error.
+;;   devuelve un árbol de sintaxis abstracta AST, de lo contrario, enviar un error.
 ;; parse: s-expression -> AST
 (define (parse sexp)
   (define (parse-op opsexp)
@@ -137,8 +137,8 @@ Martinez Calzada Diego -  318275457
 ;; dada; la cual se encuentra en forma de Arbol de Sintaxis Abstracta, y devuelve
 ;; un nuevo arbol TCFWAEL sin azucar sintactica.
 ;; * Precondiciones: Una expresion TCFWAEL en su representacion como AST.
-;; * Postcondiciones: Una expresión TCFWAEL sin azucar sintactica representada en un AST.
-;; desugar: AST -> AST
+;; * Postcondiciones: Una expresion TCFWAEL sin azucar sintactica representada en un AST.
+;;   desugar: AST -> AST
 (define (desugar s-tcfwael-expr)
   (cond
     [(id? s-tcfwael-expr) s-tcfwael-expr]
@@ -301,7 +301,7 @@ Martinez Calzada Diego -  318275457
 ;; interp, deberá cuidar los tipos de estos parámetros o argumentos).
 ;; * Precondiciones: una expresion TCFWAEL en su representacion cómo Arbol de Sintaxis Abstracta (AST).
 ;; * Postcondiciones: el tipo TCFWAEL-Value al que evaluara la expresión TCFWAEL conforme a las condiciones
-;; descritas en este ejercicio.
+;;   descritas en este ejercicio.
 ;; check-type: AST -> TCFWAEL-Value
 (define (check-type tcfwael-expr)
   (cond
@@ -346,15 +346,16 @@ Martinez Calzada Diego -  318275457
   )
 )
 
+
 ;; ******************************************************************
 
-;; 5. (3 pts). Funcion que evalúa una expresion TCFWAEL sin azucar sintactica dada bajo
+;; 5. (3 pts). Funcion que evalua una expresion TCFWAEL sin azucar sintactica dada bajo
 ;; el ambiente (Environment) env dado. El resultado de la evaluacion debe ser un valor TCFWAEL.
 ;; (TCFWAEL-Value) y no un valor de Racket.
-;; * Precondiciones: una expresión TCFWAEL en su representacion como Arbol de Sintaxis Abstracta (AST)
-;; y un ambiente de ejecucion.
+;; * Precondiciones: una expresion TCFWAEL en su representacion como Arbol de Sintaxis Abstracta (AST)
+;;   y un ambiente de ejecucion.
 ;; * Postcondiciones: un valor TCFWAEL al que se evalua la expresión TCFWAEL en el ambiente
-;; dado conforme a las condiciones descritas.
+;;   dado conforme a las condiciones descritas.
 ;; interp: AST, Environment -> TCFWAEL-Value
 (define (interp tcfwael-expr env)
   (cond
@@ -568,7 +569,6 @@ Martinez Calzada Diego -  318275457
         [(boolean? (car ids)) (filterIds (cdr ids))]
         [(list? (car ids)) (filterIds (car ids))]
         [else (filterIds (cdr ids))])))
-
 
 ;; Funcion auxiliar de interp que verifica si los argumentos de la expresion son de tipo numV
 (define (argsNumV expr)
